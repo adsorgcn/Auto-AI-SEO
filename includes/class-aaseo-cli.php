@@ -190,7 +190,13 @@ class AASEO_CLI {
 		if ( ! empty( $state['skip_reasons'] ) ) {
 			$why = AASEO_Jobs::skip_explanations();
 			foreach ( (array) $state['skip_reasons'] as $reason => $n ) {
-				WP_CLI::log( sprintf( '  %d × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
+				WP_CLI::log( sprintf( '  %d skipped × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
+			}
+		}
+		if ( ! empty( $state['repairs'] ) ) {
+			$why = AASEO_Jobs::repair_explanations();
+			foreach ( (array) $state['repairs'] as $reason => $n ) {
+				WP_CLI::log( sprintf( '  %d rewritten × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
 			}
 		}
 	}

@@ -124,4 +124,34 @@ class AASEO_Options {
 		}
 		return 'English';
 	}
+
+	/**
+	 * 站点语言所用文字的 Unicode 属性,用来判断"模型是不是没按站点语言输出"。
+	 *
+	 * 只覆盖非拉丁文字。拉丁字母语言(西/法/德/葡/意/土/印尼/越/波/荷/英)之间
+	 * 无法靠字符集区分 —— 与其用词表猜语种,不如老实返回空值:不做这项判断,
+	 * 也就不会把一条正确的西班牙语描述当成"英语跑偏"误杀。
+	 *
+	 * @return string PCRE 片段;空字符串表示该语言不适用此判断。
+	 */
+	public static function site_script() {
+		$short = strtolower( substr( get_locale(), 0, 2 ) );
+		$map   = array(
+			'zh' => '\p{Han}',
+			'ja' => '\p{Han}|\p{Hiragana}|\p{Katakana}',
+			'ko' => '\p{Hangul}',
+			'ru' => '\p{Cyrillic}', 'uk' => '\p{Cyrillic}', 'bg' => '\p{Cyrillic}',
+			'sr' => '\p{Cyrillic}', 'mk' => '\p{Cyrillic}', 'be' => '\p{Cyrillic}',
+			'ar' => '\p{Arabic}', 'fa' => '\p{Arabic}', 'ur' => '\p{Arabic}', 'ps' => '\p{Arabic}',
+			'he' => '\p{Hebrew}', 'yi' => '\p{Hebrew}',
+			'hi' => '\p{Devanagari}', 'mr' => '\p{Devanagari}', 'ne' => '\p{Devanagari}',
+			'bn' => '\p{Bengali}', 'ta' => '\p{Tamil}', 'te' => '\p{Telugu}',
+			'kn' => '\p{Kannada}', 'ml' => '\p{Malayalam}', 'gu' => '\p{Gujarati}',
+			'pa' => '\p{Gurmukhi}', 'si' => '\p{Sinhala}', 'or' => '\p{Oriya}',
+			'th' => '\p{Thai}', 'lo' => '\p{Lao}', 'km' => '\p{Khmer}', 'my' => '\p{Myanmar}',
+			'el' => '\p{Greek}', 'ka' => '\p{Georgian}', 'hy' => '\p{Armenian}',
+			'am' => '\p{Ethiopic}', 'ti' => '\p{Ethiopic}',
+		);
+		return isset( $map[ $short ] ) ? $map[ $short ] : '';
+	}
 }

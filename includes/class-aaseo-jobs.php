@@ -299,11 +299,25 @@ class AASEO_Jobs {
 	 * 判断成本,不要转手给人。
 	 */
 	public static function note_skip( $slug, $reason ) {
-		$self  = self::instance();
-		$state = self::state( $slug );
-		$tally = isset( $state['skip_reasons'] ) && is_array( $state['skip_reasons'] ) ? $state['skip_reasons'] : array();
+		self::tally( $slug, 'skip_reasons', $reason );
+	}
+
+	/**
+	 * 记一次"输出不合格、修补后写入"。
+	 *
+	 * 刻意与 note_skip 分开计数:这些条目最终是**写进去了**的,报成 "skipped" 就是谎报。
+	 * 它当仪表盘用 —— 修补率一旦变高,说明该改的是提示词,不是加大兜底。
+	 */
+	public static function note_repair( $slug, $reason ) {
+		self::tally( $slug, 'repairs', $reason );
+	}
+
+	private static function tally( $slug, $bucket, $reason ) {
+		$self             = self::instance();
+		$state            = self::state( $slug );
+		$tally            = isset( $state[ $bucket ] ) && is_array( $state[ $bucket ] ) ? $state[ $bucket ] : array();
 		$tally[ $reason ] = (int) ( isset( $tally[ $reason ] ) ? $tally[ $reason ] : 0 ) + 1;
-		$state['skip_reasons'] = $tally;
+		$state[ $bucket ] = $tally;
 		$self->write_state( $slug, $state );
 	}
 
@@ -313,6 +327,14 @@ class AASEO_Jobs {
 			'missing_file' => __( 'image file no longer exists on disk (orphaned attachment record — safe to clean up)', 'auto-ai-seo' ),
 			'decorative'   => __( 'too small to be meaningful content (logo/icon — alt is intentionally left empty)', 'auto-ai-seo' ),
 			'has_value'    => __( 'already written by a human — left untouched', 'auto-ai-seo' ),
+		);
+	}
+
+	/** 修补原因的人话解释 */
+	public static function repair_explanations() {
+		return array(
+			'length'   => __( 'first draft ran too long and was rewritten to fit', 'auto-ai-seo' ),
+			'language' => __( "first draft came back in the wrong language and was rewritten in the site's language", 'auto-ai-seo' ),
 		);
 	}
 

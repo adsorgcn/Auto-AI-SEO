@@ -120,10 +120,10 @@ class AASEO_Job_Alt extends AASEO_Job {
 				$img['base64'],
 				$img['mime'],
 				$this->prompt( $title, $context ),
-				array( 'job' => $this->slug(), 'max_tokens' => 120 )
+				array( 'job' => $this->slug(), 'max_tokens' => 120, 'system' => $this->system_line() )
 			);
 			if ( ! is_wp_error( $res ) ) {
-				$alt = $this->validate( AASEO_Client::clean( $res['text'] ), $title );
+				$alt = $this->finalize( AASEO_Client::clean( $res['text'] ), $title );
 				if ( $alt ) {
 					update_post_meta( $attachment_id, '_wp_attachment_image_alt', $alt );
 					return true;
@@ -139,7 +139,7 @@ class AASEO_Job_Alt extends AASEO_Job {
 				array( 'job' => $this->slug() . '-text', 'max_tokens' => 120, 'kind' => 'text' )
 			);
 			if ( ! is_wp_error( $res ) ) {
-				$alt = $this->validate( AASEO_Client::clean( $res['text'] ), $title );
+				$alt = $this->finalize( AASEO_Client::clean( $res['text'] ), $title );
 				if ( $alt ) {
 					update_post_meta( $attachment_id, '_wp_attachment_image_alt', $alt );
 					return true;
@@ -180,17 +180,24 @@ class AASEO_Job_Alt extends AASEO_Job {
 		if ( '' !== $context ) {
 			$lines[] = 'Surrounding text: ' . $context;
 		}
+		/*
+		 * 语言要求放在最后一行,而不是开头。
+		 * 实测过的真实失败:图片没有父文章、正文也定位不到上下文时,提示词里一个中文字都没有,
+		 * 模型就跟着提示词本身的语言走,用英文作答并顺手忽略了长度限制。
+		 * 语言这条既进 system 消息、又压在用户提示词末尾,两处冗余是故意的。
+		 */
 		$lines[] = sprintf(
-			'This image appears in that article. Write its alt attribute in %1$s.'
+			'This image appears in that article. Write its alt attribute.'
 			. "\nRules:"
 			. "\n- Name what is actually visible: the page, panel, form fields, values or objects on screen."
 			. "\n- Start directly with the subject. Never open with \"This image shows\", \"A screenshot of\","
 			. ' or any equivalent — assistive technology already announces that it is an image.'
-			. "\n- One clause, at most %2\$d characters. Shorter is better."
+			. "\n- One clause, at most %1\$d characters. Shorter is better."
 			. "\n- Do not restate the article title, and do not explain why the image matters."
-			. "\n- Output the description only.",
-			$lang,
-			(int) $this->max_chars()
+			. "\n- Output the description only."
+			. "\n- Write it in %2\$s. This is required even though these instructions are in English.",
+			(int) $this->max_chars(),
+			$lang
 		);
 		return implode( "\n", $lines );
 	}
@@ -210,29 +217,59 @@ class AASEO_Job_Alt extends AASEO_Job {
 	// ---------------------------------------------------------------- 校验
 
 	/**
-	 * 把模型输出挡在写库之前。任一条不过就返回 '' —— 交由调用方降级或留空。
+	 * 校验 → 必要时修补 → 定稿。返回 '' 表示这条不写库(交由调用方降级或留空)。
+	 *
+	 * 分两类处理,是因为两类失败的性质根本不同:
+	 *   · **废品**:复述提示词、带内部标记、照抄标题 —— 内容本身没有价值,丢掉。
+	 *   · **可修补**:太长、语言跑偏 —— 描述是对的,只是形式不合格。
+	 *     这时候图已经看过、钱已经花过,直接丢掉是最差的结果:既没拿到 alt,也没省下钱。
+	 *     用一次便宜的文本调用把它压回规格,比重新看一遍图便宜一个数量级。
+	 */
+	private function finalize( $text, $title ) {
+		$v = $this->inspect( $text, $title );
+		if ( 'ok' === $v['verdict'] ) {
+			return $v['text'];
+		}
+		if ( 'repair' !== $v['verdict'] ) {
+			return '';
+		}
+		$fixed = $this->repair( $v['text'] );
+		if ( '' === $fixed ) {
+			return '';
+		}
+		// 只给一次机会:修补后仍不合格就放弃,不做递归。
+		$again = $this->inspect( $fixed, $title );
+		if ( 'ok' !== $again['verdict'] ) {
+			return '';
+		}
+		// 计数放在确认写入之后 —— 修补失败的不该记成"已修补"。
+		AASEO_Jobs::note_repair( $this->slug(), $v['why'] );
+		return $again['text'];
+	}
+
+	/**
+	 * 判定一条输出。
 	 *
 	 * 这几条不是凭空设的,是实测中真见过的失败形态:
 	 *   · 纯 OCR 类模型会把提示词原样复述回来
 	 *   · 有模型输出带 <|begin_of_box|> 这类内部控制标记(clean() 已剥,这里兜底)
 	 *   · 最危险的是照抄文章标题 —— 那等于回到模板填充,一篇文章七张图 alt 全一样
+	 *   · 无上下文的图片上,模型会跟着英文提示词用英文作答
+	 *
+	 * @return array array( 'verdict' => 'ok'|'repair'|'discard', 'text' => string, 'why' => string )
 	 */
-	private function validate( $text, $title ) {
+	private function inspect( $text, $title ) {
 		$text = $this->strip_filler( trim( (string) $text ) );
 		if ( '' === $text ) {
-			return '';
-		}
-		// 硬上限:超出 1.5 倍才判废(留一点余量,不为几个字丢掉一条好描述)
-		if ( mb_strlen( $text ) > (int) ( $this->max_chars() * 1.5 ) ) {
-			return '';
+			return array( 'verdict' => 'discard', 'text' => '', 'why' => 'empty' );
 		}
 		if ( preg_match( '/<\|.*?\|>|\[\/?INST\]/u', $text ) ) {
-			return '';
+			return array( 'verdict' => 'discard', 'text' => $text, 'why' => 'marker' );
 		}
 		// 复述提示词的迹象
 		foreach ( array( 'alt attribute', 'Output only', 'Article title', 'Surrounding text', 'alt 属性', '只输出' ) as $needle ) {
 			if ( false !== mb_stripos( $text, $needle ) ) {
-				return '';
+				return array( 'verdict' => 'discard', 'text' => $text, 'why' => 'echo' );
 			}
 		}
 		// 照抄标题
@@ -240,10 +277,49 @@ class AASEO_Job_Alt extends AASEO_Job {
 			$a = $this->fold( $text );
 			$b = $this->fold( $title );
 			if ( '' !== $b && ( $a === $b || ( mb_strlen( $b ) > 8 && $a === mb_substr( $b, 0, mb_strlen( $a ) ) && mb_strlen( $a ) >= mb_strlen( $b ) * 0.9 ) ) ) {
-				return '';
+				return array( 'verdict' => 'discard', 'text' => $text, 'why' => 'title_copy' );
 			}
 		}
-		return $text;
+		// 以下两条:内容可用,形式不合格 —— 可修补。
+		if ( $this->wrong_script( $text ) ) {
+			return array( 'verdict' => 'repair', 'text' => $text, 'why' => 'language' );
+		}
+		// 超出 1.5 倍才算不合格(留一点余量,不为几个字折腾一条本来不错的描述)
+		if ( mb_strlen( $text ) > (int) ( $this->max_chars() * 1.5 ) ) {
+			return array( 'verdict' => 'repair', 'text' => $text, 'why' => 'length' );
+		}
+		return array( 'verdict' => 'ok', 'text' => $text, 'why' => '' );
+	}
+
+	/**
+	 * 把一条已经拿到的描述压回规格。用文本模型,不重新看图。
+	 * 单独记在 alt-fix 账下,后台能看出"修补触发得有多频繁" —— 频繁就说明提示词还得改。
+	 */
+	private function repair( $text ) {
+		$res = AASEO_Client::text(
+			$this->system_line(),
+			sprintf(
+				"Rewrite this image description in %1\$s, as one clause of at most %2\$d characters.\n"
+				. "Keep the concrete details — names, labels, on-screen values. Drop everything else.\n"
+				. "Output the rewritten description only.\n\n%3\$s",
+				AASEO_Options::site_language(),
+				(int) $this->max_chars(),
+				$text
+			),
+			array( 'job' => $this->slug() . '-fix', 'max_tokens' => 120, 'kind' => 'text' )
+		);
+		return is_wp_error( $res ) ? '' : AASEO_Client::clean( $res['text'] );
+	}
+
+	/**
+	 * 输出是否没用站点语言的文字。拉丁字母语言不做此判断(见 AASEO_Options::site_script)。
+	 */
+	private function wrong_script( $text ) {
+		$script = AASEO_Options::site_script();
+		if ( '' === $script ) {
+			return false;
+		}
+		return ! preg_match( '/' . $script . '/u', $text );
 	}
 
 	/**
@@ -264,6 +340,11 @@ class AASEO_Job_Alt extends AASEO_Job {
 			if ( null !== $stripped && '' !== trim( $stripped ) ) {
 				$text = trim( $stripped );
 			}
+		}
+		// 剥掉 "The image shows " 之后会剩下小写开头("a pricing table for…"),补回首字母大写。
+		// 只对 ASCII 首字母生效 —— 不去碰有大小写规则差异的其它文字。
+		if ( preg_match( '/^[a-z]/', $text ) ) {
+			$text = ucfirst( $text );
 		}
 		return $text;
 	}

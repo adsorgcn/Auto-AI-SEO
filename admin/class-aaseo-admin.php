@@ -280,6 +280,17 @@ class AASEO_Admin {
 					) ) . '</span>';
 				}
 			}
+			if ( ! empty( $s['repairs'] ) ) {
+				$why = AASEO_Jobs::repair_explanations();
+				foreach ( (array) $s['repairs'] as $reason => $n ) {
+					echo '<br><span class="description">' . esc_html( sprintf(
+						/* translators: 1: count, 2: reason */
+						__( '%1$d rewritten — %2$s', 'auto-ai-seo' ),
+						(int) $n,
+						isset( $why[ $reason ] ) ? $why[ $reason ] : $reason
+					) ) . '</span>';
+				}
+			}
 			echo '</td><td>';
 			foreach ( self::actions_for( $status ) as $do => $label ) {
 				$url = wp_nonce_url(

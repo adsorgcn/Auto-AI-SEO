@@ -34,18 +34,22 @@ class AASEO_Client {
 	 * @param string $image_base64  已缩放好的图片(base64,不含 data: 前缀)
 	 * @param string $mime
 	 * @param string $prompt
+	 * @param array  $args  额外支持 system:视觉模型同样吃 system 消息,
+	 *                      把"用什么语言输出"放在这里比塞进用户提示词更难被忽略。
 	 */
 	public static function vision( $image_base64, $mime, $prompt, $args = array() ) {
-		$messages = array(
-			array(
-				'role'    => 'user',
-				'content' => array(
-					array(
-						'type'      => 'image_url',
-						'image_url' => array( 'url' => 'data:' . $mime . ';base64,' . $image_base64 ),
-					),
-					array( 'type' => 'text', 'text' => $prompt ),
+		$messages = array();
+		if ( ! empty( $args['system'] ) ) {
+			$messages[] = array( 'role' => 'system', 'content' => (string) $args['system'] );
+		}
+		$messages[] = array(
+			'role'    => 'user',
+			'content' => array(
+				array(
+					'type'      => 'image_url',
+					'image_url' => array( 'url' => 'data:' . $mime . ';base64,' . $image_base64 ),
 				),
+				array( 'type' => 'text', 'text' => $prompt ),
 			),
 		);
 		$args = wp_parse_args( $args, array( 'kind' => 'vision' ) );
