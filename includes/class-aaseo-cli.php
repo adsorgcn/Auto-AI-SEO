@@ -15,9 +15,22 @@ class AASEO_CLI {
 	/**
 	 * 列出所有可用模块及其状态。
 	 *
+	 * ## OPTIONS
+	 *
+	 * [--format=<format>]
+	 * : table | csv | json | yaml
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - json
+	 *   - yaml
+	 * ---
+	 *
 	 * @subcommand jobs
 	 */
-	public function jobs() {
+	public function jobs( $args, $assoc = array() ) {
 		$rows = array();
 		foreach ( AASEO_Jobs::instance()->all() as $slug => $job ) {
 			$s      = $job->state();
@@ -35,7 +48,12 @@ class AASEO_CLI {
 			WP_CLI::warning( 'No jobs registered yet.' );
 			return;
 		}
-		WP_CLI\Utils\format_items( 'table', $rows, array( 'slug', 'label', 'pending', 'status', 'done', 'failed', 'ready' ) );
+		// 尊重 --format:脚本化监控要靠 csv/json 取字段,只给 table 等于逼人去 cut 制表符。
+		WP_CLI\Utils\format_items(
+			isset( $assoc['format'] ) ? $assoc['format'] : 'table',
+			$rows,
+			array( 'slug', 'label', 'pending', 'status', 'done', 'failed', 'ready' )
+		);
 	}
 
 	/**
