@@ -13,6 +13,7 @@ class AASEO_Jobs {
 
 	const STATE_OPTION = 'aaseo_job_state';
 	const ENQUEUE_CHUNK = 200;   // 每次入队 200 条,分多轮 —— 避免一次性取上万 ID
+	const MAX_ENQUEUE_ROUNDS = 5; // 补扫轮数上限,防止处理速度跟不上时无限循环
 
 	/** @var AASEO_Jobs */
 	private static $instance;
@@ -63,7 +64,7 @@ class AASEO_Jobs {
 	 * 不在这里把所有候选一次性入队,而是排一个"入队任务",由它分批把工作项入队 ——
 	 * 入队本身也是后台工作,这样点一下按钮就返回,不会卡住请求。
 	 */
-	public function start( $slug ) {
+	public function start( $slug, $limit = 0 ) {
 		$job = $this->get( $slug );
 		if ( ! $job ) {
 			return new WP_Error( 'no_job', 'Unknown job: ' . $slug );
@@ -75,9 +76,14 @@ class AASEO_Jobs {
 			return new WP_Error( 'no_scheduler', 'Action Scheduler unavailable' );
 		}
 
+		$total = (int) $job->count_candidates();
+		if ( $limit > 0 ) {
+			$total = min( $total, (int) $limit );
+		}
 		$this->set_state( $slug, array(
 			'status'   => 'running',
-			'total'    => (int) $job->count_candidates(),
+			'total'    => $total,
+			'limit'    => (int) $limit,
 			'queued'   => 0,
 			'done'     => 0,
 			'failed'   => 0,
@@ -88,38 +94,77 @@ class AASEO_Jobs {
 
 		as_enqueue_async_action(
 			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-			array( 'slug' => $slug, 'offset' => 0 ),
+			array( 'slug' => $slug, 'offset' => 0, 'round' => 0 ),
 			$job->group()
 		);
 		return true;
 	}
 
-	/** 分批入队:取一段候选 → 逐条排任务 → 如还有剩余,排下一轮入队任务 */
-	public function enqueue_chunk( $slug, $offset = 0 ) {
-		// AS 传参会把关联数组展开成位置参数,兼容两种形态
+	/**
+	 * 分批入队。
+	 *
+	 * 这里有个不显眼但会漏活的陷阱:候选集是"还没处理的对象",**处理完就从集合里消失**,
+	 * 于是 offset 会跳过后面等量的条目。所以:
+	 *   · 逐条用 as_has_scheduled_action() 去重,不怕重复扫到同一条;
+	 *   · 一轮扫完(取不满一批)后,若仍有候选,从 offset 0 再扫一轮补漏;
+	 *   · 轮数设上限,避免"处理速度跟不上入队速度"时无限循环。
+	 */
+	public function enqueue_chunk( $slug, $offset = 0, $round = 0 ) {
+		// AS 会把关联数组展开成位置参数,兼容两种形态
 		if ( is_array( $slug ) ) {
 			$args   = $slug;
 			$slug   = isset( $args['slug'] ) ? $args['slug'] : '';
 			$offset = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
+			$round  = isset( $args['round'] ) ? (int) $args['round'] : 0;
 		}
 		$job = $this->get( $slug );
 		if ( ! $job ) {
 			return;
 		}
 
-		$ids = $job->find_candidates( self::ENQUEUE_CHUNK, (int) $offset );
-		foreach ( $ids as $id ) {
-			as_enqueue_async_action( $job->hook(), array( 'slug' => $slug, 'object_id' => (int) $id ), $job->group() );
+		$state = $this->state( $slug );
+		$limit = isset( $state['limit'] ) ? (int) $state['limit'] : 0;
+		$done  = (int) ( isset( $state['queued'] ) ? $state['queued'] : 0 );
+		if ( $limit > 0 && $done >= $limit ) {
+			return; // --limit 已排满
 		}
-		$this->bump( $slug, 'queued', count( $ids ) );
 
-		if ( count( $ids ) >= self::ENQUEUE_CHUNK ) {
-			as_enqueue_async_action(
-				'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-				array( 'slug' => $slug, 'offset' => (int) $offset + self::ENQUEUE_CHUNK ),
-				$job->group()
-			);
+		$want  = $limit > 0 ? min( self::ENQUEUE_CHUNK, $limit - $done ) : self::ENQUEUE_CHUNK;
+		$ids   = $job->find_candidates( $want, (int) $offset );
+		$fresh = 0;
+		foreach ( $ids as $id ) {
+			$payload = array( 'slug' => $slug, 'object_id' => (int) $id );
+			if ( function_exists( 'as_has_scheduled_action' )
+				&& as_has_scheduled_action( $job->hook(), $payload, $job->group() ) ) {
+				continue; // 已在队列里,不重复排
+			}
+			as_enqueue_async_action( $job->hook(), $payload, $job->group() );
+			++$fresh;
 		}
+		if ( $fresh ) {
+			$this->bump( $slug, 'queued', $fresh );
+		}
+
+		$next_offset = (int) $offset + count( $ids );
+		$next_round  = (int) $round;
+
+		if ( count( $ids ) < $want ) {
+			// 这一轮扫到底了 —— 若还有候选(说明被 offset 跳过),从头补扫
+			$next_offset = 0;
+			++$next_round;
+			if ( $next_round > self::MAX_ENQUEUE_ROUNDS || ! $job->count_candidates() ) {
+				return;
+			}
+			if ( ! $fresh ) {
+				return; // 整轮没排进任何新条目,说明剩下的都在队列里了
+			}
+		}
+
+		as_enqueue_async_action(
+			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
+			array( 'slug' => $slug, 'offset' => $next_offset, 'round' => $next_round ),
+			$job->group()
+		);
 	}
 
 	// ---------------------------------------------------------------- 执行
@@ -246,6 +291,31 @@ class AASEO_Jobs {
 
 	// ---------------------------------------------------------------- 运行态
 
+	/**
+	 * 记一条跳过的原因。
+	 *
+	 * 目的不是记日志,是**把判断结论告诉用户**:与其在界面上显示"18 条失败"让人发慌,
+	 * 不如说清"18 张图在磁盘上已不存在(孤儿附件记录),可以清理" —— 该由插件消化的
+	 * 判断成本,不要转手给人。
+	 */
+	public static function note_skip( $slug, $reason ) {
+		$self  = self::instance();
+		$state = self::state( $slug );
+		$tally = isset( $state['skip_reasons'] ) && is_array( $state['skip_reasons'] ) ? $state['skip_reasons'] : array();
+		$tally[ $reason ] = (int) ( isset( $tally[ $reason ] ) ? $tally[ $reason ] : 0 ) + 1;
+		$state['skip_reasons'] = $tally;
+		$self->write_state( $slug, $state );
+	}
+
+	/** 跳过原因的人话解释 */
+	public static function skip_explanations() {
+		return array(
+			'missing_file' => __( 'image file no longer exists on disk (orphaned attachment record — safe to clean up)', 'auto-ai-seo' ),
+			'decorative'   => __( 'too small to be meaningful content (logo/icon — alt is intentionally left empty)', 'auto-ai-seo' ),
+			'has_value'    => __( 'already written by a human — left untouched', 'auto-ai-seo' ),
+		);
+	}
+
 	public static function state( $slug ) {
 		$all = get_option( self::STATE_OPTION );
 		$all = is_array( $all ) ? $all : array();
@@ -256,6 +326,11 @@ class AASEO_Jobs {
 	}
 
 	private function set_state( $slug, array $state ) {
+		$this->write_state( $slug, $state );
+	}
+
+	/** note_skip() 是静态的,需要一个可从静态上下文调用的写入口 */
+	private function write_state( $slug, array $state ) {
 		$all          = get_option( self::STATE_OPTION );
 		$all          = is_array( $all ) ? $all : array();
 		$all[ $slug ] = $state;

@@ -269,6 +269,17 @@ class AASEO_Admin {
 			if ( ! empty( $s['note'] ) ) {
 				echo '<br><span class="description">' . esc_html( $s['note'] ) . '</span>';
 			}
+			if ( ! empty( $s['skip_reasons'] ) ) {
+				$why = AASEO_Jobs::skip_explanations();
+				foreach ( (array) $s['skip_reasons'] as $reason => $n ) {
+					echo '<br><span class="description">' . esc_html( sprintf(
+						/* translators: 1: count, 2: reason */
+						__( '%1$d skipped — %2$s', 'auto-ai-seo' ),
+						(int) $n,
+						isset( $why[ $reason ] ) ? $why[ $reason ] : $reason
+					) ) . '</span>';
+				}
+			}
 			echo '</td><td>';
 			foreach ( self::actions_for( $status ) as $do => $label ) {
 				$url = wp_nonce_url(

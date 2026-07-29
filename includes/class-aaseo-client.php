@@ -84,6 +84,10 @@ class AASEO_Client {
 			if ( ! is_wp_error( $res ) ) {
 				AASEO_Usage::record( $args['job'], $model, $res['usage']['prompt_tokens'],
 					$res['usage']['completion_tokens'], $seconds, true );
+				// 每次成功都是一个标定样本 —— 超时与批量参数由此自我校准,不靠猜
+				AASEO_Probe::record_sample( $args['kind'], $seconds,
+					$res['usage']['prompt_tokens'], $res['usage']['completion_tokens'] );
+				AASEO_Probe::note_success( $args['kind'] );
 				$res['seconds']  = round( $seconds, 2 );
 				$res['fallback'] = $i;   // 0 = 首选命中
 				return $res;
@@ -96,19 +100,49 @@ class AASEO_Client {
 		return $last ? $last : new WP_Error( 'chain_failed', __( 'All models failed.', 'auto-ai-seo' ) );
 	}
 
-	/** 单次调用 */
-	private static function call( $model, array $messages, array $args, $timeout ) {
+	const UNSUPPORTED_OPTION = 'aaseo_unsupported_params';
+
+	/**
+	 * 可选参数:能省时间/token,但不是每个模型都认。
+	 * 服务商拒收时会自动摘掉并重试,且记住该模型不认它 —— 下次不再浪费一次调用。
+	 */
+	private static function optional_params() {
+		return array(
+			// 混合思考模型默认会思考,对"短输出、无需推理"的任务纯属浪费
+			'enable_thinking' => false,
+		);
+	}
+
+	/** 某模型已知不认的可选参数 */
+	private static function unsupported_for( $model ) {
+		$all = get_option( self::UNSUPPORTED_OPTION );
+		$all = is_array( $all ) ? $all : array();
+		return isset( $all[ $model ] ) ? (array) $all[ $model ] : array();
+	}
+
+	private static function remember_unsupported( $model, $param ) {
+		$all              = get_option( self::UNSUPPORTED_OPTION );
+		$all              = is_array( $all ) ? $all : array();
+		$list             = isset( $all[ $model ] ) ? (array) $all[ $model ] : array();
+		$list[]           = $param;
+		$all[ $model ]    = array_values( array_unique( $list ) );
+		update_option( self::UNSUPPORTED_OPTION, $all, false );
+	}
+
+	/** 单次调用。遇到"不支持某参数"会自动摘掉重试一次(evasive action)。 */
+	private static function call( $model, array $messages, array $args, $timeout, $retry = true ) {
 		$body = array(
 			'model'       => $model,
 			'messages'    => $messages,
 			'max_tokens'  => (int) $args['max_tokens'],
 			'temperature' => (float) $args['temperature'],
 		);
-		/**
-		 * 混合思考模型(Qwen3 系)默认会思考,对这类"短输出、无需推理"的任务纯属浪费时间与
-		 * token,故显式关闭。不认识该字段的服务商会忽略它。
-		 */
-		$body['enable_thinking'] = false;
+		$known_bad = self::unsupported_for( $model );
+		foreach ( self::optional_params() as $param => $value ) {
+			if ( ! in_array( $param, $known_bad, true ) ) {
+				$body[ $param ] = $value;
+			}
+		}
 
 		$response = wp_remote_post(
 			trailingslashit( AASEO_Options::get( 'api_base' ) ) . 'v1/chat/completions',
@@ -136,6 +170,21 @@ class AASEO_Client {
 		if ( 200 !== $status ) {
 			$msg = isset( $json['message'] ) ? $json['message']
 				: ( isset( $json['error']['message'] ) ? $json['error']['message'] : 'HTTP ' . $status );
+
+			/*
+			 * 服务商拒收某个可选参数时,摘掉它重试一次,并记住这个模型不认它。
+			 * 实测:视觉模型不接受 enable_thinking,而文本模型接受 —— 这种差异
+			 * 无法预先穷举,只能让插件自己发现并适应,不该要求用户去配。
+			 */
+			if ( $retry ) {
+				foreach ( array_keys( self::optional_params() ) as $param ) {
+					if ( false !== stripos( $msg, $param ) ) {
+						self::remember_unsupported( $model, $param );
+						return self::call( $model, $messages, $args, $timeout, false );
+					}
+				}
+			}
+
 			$code = 429 === $status ? 'rate_limited' : ( in_array( $status, array( 401, 403 ), true ) ? 'auth' : 'api_error' );
 			return new WP_Error( $code, $msg, array( 'status' => $status ) );
 		}

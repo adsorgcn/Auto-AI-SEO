@@ -34,8 +34,10 @@ require_once AASEO_DIR . 'includes/class-aaseo-install.php';
 require_once AASEO_DIR . 'includes/class-aaseo-usage.php';
 require_once AASEO_DIR . 'includes/class-aaseo-client.php';
 require_once AASEO_DIR . 'includes/class-aaseo-probe.php';
+require_once AASEO_DIR . 'includes/class-aaseo-image.php';
 require_once AASEO_DIR . 'includes/abstract-aaseo-job.php';
 require_once AASEO_DIR . 'includes/class-aaseo-jobs.php';
+require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
 
 register_activation_hook( __FILE__, array( 'AASEO_Install', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'AASEO_Install', 'deactivate' ) );
@@ -59,6 +61,12 @@ function aaseo_boot() {
 	 * @param AASEO_Jobs $registry
 	 */
 	do_action( 'aaseo_register_jobs', AASEO_Jobs::instance() );
+}
+
+add_action( 'aaseo_register_jobs', 'aaseo_register_builtin_jobs' );
+
+function aaseo_register_builtin_jobs( $registry ) {
+	$registry->register( new AASEO_Job_Alt() );
 }
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

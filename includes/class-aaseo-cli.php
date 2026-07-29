@@ -85,6 +85,9 @@ class AASEO_CLI {
 	 * [--queue]
 	 * : 交给 Action Scheduler 后台跑,而不是在本进程同步跑
 	 *
+	 * [--yes]
+	 * : 跳过成本确认
+	 *
 	 * @subcommand run
 	 */
 	public function run( $args, $assoc ) {
@@ -97,17 +100,21 @@ class AASEO_CLI {
 			WP_CLI::error( 'Job is not ready — check the API key in Settings.' );
 		}
 
+		$dry   = ! empty( $assoc['dry-run'] );
+		$limit = isset( $assoc['limit'] ) ? (int) $assoc['limit'] : 0;
+
 		if ( ! empty( $assoc['queue'] ) ) {
-			$res = AASEO_Jobs::instance()->start( $slug );
+			$res = AASEO_Jobs::instance()->start( $slug, $limit );
 			if ( is_wp_error( $res ) ) {
 				WP_CLI::error( $res->get_error_message() );
 			}
-			WP_CLI::success( 'Queued in the background. Watch: wp aaseo jobs' );
+			WP_CLI::success( sprintf(
+				'Queued in the background%s. Watch: wp aaseo jobs',
+				$limit > 0 ? sprintf( ' (up to %d item(s))', $limit ) : ''
+			) );
 			return;
 		}
 
-		$dry   = ! empty( $assoc['dry-run'] );
-		$limit = isset( $assoc['limit'] ) ? (int) $assoc['limit'] : 0;
 		$total = $limit > 0 ? min( $limit, $job->count_candidates() ) : $job->count_candidates();
 		if ( ! $total ) {
 			WP_CLI::success( 'Nothing to do.' );
@@ -178,6 +185,14 @@ class AASEO_CLI {
 			$done, $skipped, $failed,
 			number_format( $spent['tokens'] ), AASEO_Usage::format_money( $spent['micro'] )
 		) );
+		// 跳过的原因说清楚,而不是丢一个数字让人猜
+		$state = AASEO_Jobs::state( $slug );
+		if ( ! empty( $state['skip_reasons'] ) ) {
+			$why = AASEO_Jobs::skip_explanations();
+			foreach ( (array) $state['skip_reasons'] as $reason => $n ) {
+				WP_CLI::log( sprintf( '  %d × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
+			}
+		}
 	}
 
 	/**
