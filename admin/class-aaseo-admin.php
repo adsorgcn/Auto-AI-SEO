@@ -61,6 +61,15 @@ class AASEO_Admin {
 				? sanitize_textarea_field( wp_unslash( $_POST['site_context'] ) ) : $old['site_context'],
 			'vision_models'   => self::parse_models( 'vision_models', $old['vision_models'] ),
 			'text_models'     => self::parse_models( 'text_models', $old['text_models'] ),
+			/*
+			 * 两个布尔必须整组保存:
+			 * ① 未勾选的 checkbox 根本不出现在 $_POST 里,所以要按 isset 显式落 false;
+			 * ② all() 是浅合并 —— 只存其中一个键,另一个键会整个消失(取到 null)。
+			 */
+			'robots'          => array(
+				'robots_txt'      => isset( $_POST['robots_txt'] ),
+				'noindex_headers' => isset( $_POST['noindex_headers'] ),
+			),
 		) );
 
 		wp_safe_redirect( self::url( array( 'saved' => 1 ) ) );
@@ -185,6 +194,9 @@ class AASEO_Admin {
 				<?php endforeach; ?>
 			</ul>
 
+			<h2><?php esc_html_e( 'Robots & indexing', 'auto-ai-seo' ); ?></h2>
+			<?php self::render_robots(); ?>
+
 			<h2><?php esc_html_e( 'Settings', 'auto-ai-seo' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( 'aaseo_save' ); ?>
@@ -230,6 +242,24 @@ class AASEO_Admin {
 						<th scope="row"><?php esc_html_e( 'Site context', 'auto-ai-seo' ); ?></th>
 						<td><textarea name="site_context" rows="3" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Tech review blog; recurring brands: xiaomi, dji, anker', 'auto-ai-seo' ); ?>"><?php echo esc_textarea( $o['site_context'] ); ?></textarea>
 							<p class="description"><?php esc_html_e( 'Describing your niche and recurring proper nouns noticeably improves accuracy.', 'auto-ai-seo' ); ?></p></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Robots & indexing', 'auto-ai-seo' ); ?></th>
+						<td>
+							<fieldset>
+								<label>
+									<input type="checkbox" name="robots_txt" <?php checked( AASEO_Options::robots( 'robots_txt' ) ); ?>>
+									<?php esc_html_e( 'Append rules to robots.txt', 'auto-ai-seo' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'Adds to what WordPress and other plugins output — never replaces it.', 'auto-ai-seo' ); ?></p>
+								<br>
+								<label>
+									<input type="checkbox" name="noindex_headers" <?php checked( AASEO_Options::robots( 'noindex_headers' ) ); ?>>
+									<?php esc_html_e( 'Send noindex headers on outbound redirects', 'auto-ai-seo' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'Keeps redirect endpoints (e.g. affiliate short links) out of search results while staying crawlable — blocking them in robots.txt would hide the noindex from crawlers and backfire.', 'auto-ai-seo' ); ?></p>
+							</fieldset>
+						</td>
 					</tr>
 				</table>
 				<p><button class="button button-primary"><?php esc_html_e( 'Save settings', 'auto-ai-seo' ); ?></button></p>
@@ -301,6 +331,62 @@ class AASEO_Admin {
 			}
 			echo '</td></tr>';
 		}
+		echo '</tbody></table>';
+	}
+
+	/**
+	 * robots 状态面板。只读 —— 开关在下面的设置表单里,这里是"现在实际发生着什么"。
+	 *
+	 * 展示原则与任务面板一致:把判断做完再给人看。
+	 * 被冲突守卫丢弃的规则要说清"为什么被丢",而不是无声地消失。
+	 */
+	private static function render_robots() {
+		$p = AASEO_Robots::preview();
+
+		if ( '' !== $p['physical_file'] ) {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html( sprintf(
+				/* translators: %s: file path */
+				__( 'A real robots.txt file exists at %s. The web server serves that file directly, so no WordPress rules (from this or any plugin) apply. Edit or remove the file yourself — this plugin will never touch it.', 'auto-ai-seo' ),
+				$p['physical_file']
+			) ) . '</p></div>';
+		}
+
+		echo '<table class="widefat striped" style="max-width:760px"><tbody>';
+
+		echo '<tr><td>' . esc_html__( 'robots.txt rules', 'auto-ai-seo' ) . '</td><td>'
+			. esc_html( $p['enabled'] ? __( 'on', 'auto-ai-seo' ) : __( 'off', 'auto-ai-seo' ) ) . '</td></tr>';
+		echo '<tr><td>' . esc_html__( 'noindex headers', 'auto-ai-seo' ) . '</td><td>'
+			. esc_html( $p['headers'] ? __( 'on', 'auto-ai-seo' ) : __( 'off', 'auto-ai-seo' ) ) . '</td></tr>';
+
+		echo '<tr><td>' . esc_html__( 'noindex paths', 'auto-ai-seo' ) . '</td><td>';
+		if ( $p['noindex_paths'] ) {
+			echo '<code>' . implode( '</code> <code>', array_map( 'esc_html', $p['noindex_paths'] ) ) . '</code>';
+			echo '<br><span class="description">' . esc_html__( 'Registered by other plugins via the aaseo_noindex_paths filter. These stay crawlable on purpose: crawlers must be able to fetch a URL to see its noindex.', 'auto-ai-seo' ) . '</span>';
+		} else {
+			echo '<span class="description">' . esc_html__( 'none registered', 'auto-ai-seo' ) . '</span>';
+		}
+		echo '</td></tr>';
+
+		if ( $p['dropped'] ) {
+			echo '<tr><td>' . esc_html__( 'dropped rules', 'auto-ai-seo' ) . '</td><td><code>'
+				. implode( '</code> <code>', array_map( 'esc_html', $p['dropped'] ) ) . '</code><br><span class="description" style="color:#b32d2e">'
+				. esc_html__( 'These Disallow rules were refused: they overlap a noindex path, and blocking crawl there would hide the noindex from crawlers (or the 50-rule cap was hit).', 'auto-ai-seo' )
+				. '</span></td></tr>';
+		}
+
+		echo '<tr><td>' . esc_html__( 'appended block', 'auto-ai-seo' ) . '</td><td>';
+		if ( '' !== $p['block'] ) {
+			echo '<pre style="margin:0;padding:8px;background:#f6f7f7;overflow:auto">' . esc_html( $p['block'] ) . '</pre>';
+		} else {
+			echo '<span class="description">' . esc_html__( 'nothing (module disabled or no rules)', 'auto-ai-seo' ) . '</span>';
+		}
+		echo '<span class="description">' . esc_html( sprintf(
+			/* translators: %s: robots.txt URL */
+			__( 'Live file: %s', 'auto-ai-seo' ),
+			home_url( '/robots.txt' )
+		) ) . '</span>';
+		echo '</td></tr>';
+
 		echo '</tbody></table>';
 	}
 
