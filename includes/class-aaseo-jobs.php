@@ -14,6 +14,17 @@ class AASEO_Jobs {
 	const STATE_OPTION = 'aaseo_job_state';
 	const ENQUEUE_CHUNK = 200;   // 每次入队 200 条,分多批 —— 避免一次性取上万 ID
 
+	/**
+	 * 入队动作参数的格式版本。**改动参数形状时必须 +1。**
+	 *
+	 * 为什么需要它:Action Scheduler 执行动作时用 do_action_ref_array( hook, array_values( args ) ),
+	 * **键名会丢,只按位置传**。于是升级插件时,队列里遗留的旧格式动作会被新签名按位置错读 ——
+	 * 实测踩过:旧动作 {slug, offset:200, round:0} 在新签名下把 200 当成了游标,
+	 * 于是只查到 ID<200 的 7 张图,链条随即断掉,几百张活悄悄没了。
+	 * 参数里带上版本号、对不上就丢弃,这类事故就不可能发生 —— 而不是靠"升级时记得清队列"。
+	 */
+	const ENQUEUE_ARGS_VERSION = 2;
+
 	/** @var AASEO_Jobs */
 	private static $instance;
 
@@ -52,7 +63,7 @@ class AASEO_Jobs {
 	public function attach_handlers() {
 		foreach ( $this->jobs as $slug => $job ) {
 			add_action( $job->hook(), array( $this, 'run_one' ), 10, 2 );
-			add_action( 'aaseo_enqueue_' . str_replace( '-', '_', $slug ), array( $this, 'enqueue_chunk' ), 10, 2 );
+			add_action( 'aaseo_enqueue_' . str_replace( '-', '_', $slug ), array( $this, 'enqueue_chunk' ), 10, 3 );
 		}
 	}
 
@@ -93,7 +104,7 @@ class AASEO_Jobs {
 
 		as_enqueue_async_action(
 			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-			array( 'slug' => $slug, 'cursor' => 0 ),
+			array( 'slug' => $slug, 'cursor' => 0, 'v' => self::ENQUEUE_ARGS_VERSION ),
 			$job->group()
 		);
 		return true;
@@ -109,12 +120,17 @@ class AASEO_Jobs {
 	 * 仍然保留 as_has_scheduled_action() 去重:同一模块被连点两次"开始"时,
 	 * 两条入队链会各自扫一遍,去重能挡住重复排队。
 	 */
-	public function enqueue_chunk( $slug, $cursor = 0 ) {
+	public function enqueue_chunk( $slug, $cursor = 0, $args_version = 0 ) {
 		// AS 会把关联数组展开成位置参数,兼容两种形态
 		if ( is_array( $slug ) ) {
-			$args   = $slug;
-			$slug   = isset( $args['slug'] ) ? $args['slug'] : '';
-			$cursor = isset( $args['cursor'] ) ? (int) $args['cursor'] : 0;
+			$args         = $slug;
+			$slug         = isset( $args['slug'] ) ? $args['slug'] : '';
+			$cursor       = isset( $args['cursor'] ) ? (int) $args['cursor'] : 0;
+			$args_version = isset( $args['v'] ) ? (int) $args['v'] : 0;
+		}
+		// 旧格式的遗留动作:按位置读会误判,直接丢弃(见 ENQUEUE_ARGS_VERSION 注释)
+		if ( (int) $args_version !== self::ENQUEUE_ARGS_VERSION ) {
+			return;
 		}
 		$job = $this->get( $slug );
 		if ( ! $job ) {
@@ -146,6 +162,12 @@ class AASEO_Jobs {
 		}
 		if ( $fresh ) {
 			$this->bump( $slug, 'queued', $fresh );
+			// 又排进了新活 → 状态必须回到 running。
+			// 否则一旦中途被 maybe_finish 误标成 done,界面就会一直显示"已完成"而其实还在跑。
+			$s = $this->state( $slug );
+			if ( 'done' === ( isset( $s['status'] ) ? $s['status'] : '' ) ) {
+				$this->set_state( $slug, array_merge( $s, array( 'status' => 'running' ) ) );
+			}
 		}
 
 		/*
@@ -159,7 +181,7 @@ class AASEO_Jobs {
 
 		as_enqueue_async_action(
 			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-			array( 'slug' => $slug, 'cursor' => $next ),
+			array( 'slug' => $slug, 'cursor' => $next, 'v' => self::ENQUEUE_ARGS_VERSION ),
 			$job->group()
 		);
 	}
@@ -277,13 +299,22 @@ class AASEO_Jobs {
 	}
 
 	private function maybe_finish( $slug ) {
-		if ( 0 === $this->pending_count( $slug ) ) {
-			$s = $this->state( $slug );
-			$this->set_state( $slug, array_merge( $s, array(
-				'status'   => 'done',
-				'finished' => current_time( 'mysql', true ),
-			) ) );
+		if ( 0 !== $this->pending_count( $slug ) ) {
+			return;
 		}
+		/*
+		 * 工作项排空 ≠ 干完了:入队链是分批的,这一批跑完时下一批往往还挂在队列上。
+		 * 只看工作项就会在中途报"已完成",而其实还有几百条没入队 —— 实测见过。
+		 */
+		if ( function_exists( 'as_has_scheduled_action' )
+			&& as_has_scheduled_action( 'aaseo_enqueue_' . str_replace( '-', '_', $slug ) ) ) {
+			return;
+		}
+		$s = $this->state( $slug );
+		$this->set_state( $slug, array_merge( $s, array(
+			'status'   => 'done',
+			'finished' => current_time( 'mysql', true ),
+		) ) );
 	}
 
 	// ---------------------------------------------------------------- 运行态
