@@ -17,6 +17,7 @@ class AASEO_Admin {
 		add_action( 'admin_post_aaseo_save', array( __CLASS__, 'save' ) );
 		add_action( 'admin_post_aaseo_job', array( __CLASS__, 'job_action' ) );
 		add_action( 'admin_post_aaseo_link', array( __CLASS__, 'link_action' ) );
+		add_action( 'admin_post_aaseo_link_bulk', array( __CLASS__, 'link_bulk' ) );
 	}
 
 	public static function menu() {
@@ -432,6 +433,58 @@ class AASEO_Admin {
 		exit;
 	}
 
+	/**
+	 * 批量批准/拒绝。几百条建议逐条点是折磨 —— 老站一次跑批就是上千条,
+	 * 没有批量操作等于逼用户放弃审核。
+	 */
+	public static function link_bulk() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'auto-ai-seo' ) );
+		}
+		check_admin_referer( 'aaseo_link_bulk' );
+		$do  = isset( $_POST['do'] ) ? sanitize_key( wp_unslash( $_POST['do'] ) ) : '';
+		$ids = isset( $_POST['ids'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['ids'] ) ) : array();
+		$sum = self::bulk( $ids, $do );
+		wp_safe_redirect( add_query_arg(
+			array(
+				'msg'      => rawurlencode( 'bulk_' . $do ),
+				'ok'       => (int) $sum['ok'],
+				'stale'    => (int) $sum['stale'],
+				'failed'   => (int) $sum['failed'],
+			),
+			admin_url( 'admin.php?page=' . self::SLUG . '-links' )
+		) );
+		exit;
+	}
+
+	/**
+	 * 批量处理核心。与单条走**同一套** approve()/reject() —— 原子认领、kses 守卫、
+	 * 落点复核在批量下一条不少;正文已变的建议照样温和地转 stale,不硬塞。
+	 *
+	 * @return array array( 'ok' => n, 'stale' => n, 'failed' => n )
+	 */
+	private static function bulk( array $ids, $do ) {
+		$sum = array( 'ok' => 0, 'stale' => 0, 'failed' => 0 );
+		if ( ! in_array( $do, array( 'approve', 'reject' ), true ) || ! $ids ) {
+			return $sum;
+		}
+		// 批准要逐篇改正文,量大时别让前端代理把请求掐死
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 300 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		}
+		foreach ( $ids as $id ) {
+			$res = 'approve' === $do ? AASEO_Links::approve( (int) $id ) : AASEO_Links::reject( (int) $id );
+			if ( ! is_wp_error( $res ) ) {
+				++$sum['ok'];
+			} elseif ( in_array( $res->get_error_code(), array( 'stale', 'dupe', 'no_anchor' ), true ) ) {
+				++$sum['stale']; // 建议过期不是失败:目标没了/正文变了/已有同目标链接
+			} else {
+				++$sum['failed'];
+			}
+		}
+		return $sum;
+	}
+
 	/** 内链审核页:AI 把判断做完(锚文本/目标/相关性/理由/上下文),点头与否是人的事 */
 	public static function render_links_page() {
 		if ( ! current_user_can( self::CAP ) ) {
@@ -446,7 +499,22 @@ class AASEO_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Internal link suggestions', 'auto-ai-seo' ); ?></h1>
-			<?php if ( '' !== $msg ) : ?>
+			<?php if ( 0 === strpos( $msg, 'bulk_' ) ) : ?>
+				<div class="notice notice-info"><p>
+					<?php
+					// 状态提示参数,不改数据,无需 nonce
+					// phpcs:disable WordPress.Security.NonceVerification.Recommended
+					printf(
+						/* translators: 1: succeeded, 2: skipped as stale, 3: failed */
+						esc_html__( 'Bulk done: %1$d processed, %2$d skipped as stale (post changed / target gone / already linked), %3$d failed.', 'auto-ai-seo' ),
+						isset( $_GET['ok'] ) ? (int) $_GET['ok'] : 0,
+						isset( $_GET['stale'] ) ? (int) $_GET['stale'] : 0,
+						isset( $_GET['failed'] ) ? (int) $_GET['failed'] : 0
+					);
+					// phpcs:enable WordPress.Security.NonceVerification.Recommended
+					?>
+				</p></div>
+			<?php elseif ( '' !== $msg ) : ?>
 				<div class="notice notice-info"><p><?php echo esc_html( self::notice_label( $msg ) ); ?></p></div>
 			<?php endif; ?>
 			<p class="description">
@@ -463,40 +531,63 @@ class AASEO_Admin {
 			<?php if ( ! $pending ) : ?>
 				<p><?php esc_html_e( 'No suggestions waiting. Run the “Internal link suggestions” task to generate more.', 'auto-ai-seo' ); ?></p>
 			<?php else : ?>
-				<table class="wp-list-table widefat striped">
-					<thead><tr>
-						<th><?php esc_html_e( 'In post', 'auto-ai-seo' ); ?></th>
-						<th><?php esc_html_e( 'Anchor in context', 'auto-ai-seo' ); ?></th>
-						<th><?php esc_html_e( 'Links to', 'auto-ai-seo' ); ?></th>
-						<th><?php esc_html_e( 'Score', 'auto-ai-seo' ); ?></th>
-						<th><?php esc_html_e( 'Why', 'auto-ai-seo' ); ?></th>
-						<th><?php esc_html_e( 'Decision', 'auto-ai-seo' ); ?></th>
-					</tr></thead>
-					<tbody>
-					<?php foreach ( $pending as $row ) : ?>
-						<tr>
-							<td><a href="<?php echo esc_url( get_permalink( (int) $row->source_id ) ); ?>" target="_blank" rel="noopener">
-								<?php echo esc_html( get_the_title( (int) $row->source_id ) ); ?></a></td>
-							<td><?php echo wp_kses( self::anchor_context( $row ), array( 'mark' => array() ) ); ?></td>
-							<td><a href="<?php echo esc_url( get_permalink( (int) $row->target_id ) ); ?>" target="_blank" rel="noopener">
-								<?php echo esc_html( get_the_title( (int) $row->target_id ) ); ?></a></td>
-							<td><?php echo esc_html( $row->relevance . '/5' ); ?></td>
-							<td><span class="description"><?php echo esc_html( $row->reason ); ?></span></td>
-							<td>
-								<?php
-								foreach ( array( 'approve' => __( 'Approve', 'auto-ai-seo' ), 'reject' => __( 'Reject', 'auto-ai-seo' ) ) as $do => $label ) {
-									$url = wp_nonce_url(
-										admin_url( 'admin-post.php?action=aaseo_link&id=' . (int) $row->id . '&do=' . $do ),
-										'aaseo_link_' . (int) $row->id . '_' . $do
-									);
-									printf( '<a class="button button-small" href="%s">%s</a> ', esc_url( $url ), esc_html( $label ) );
-								}
-								?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<?php wp_nonce_field( 'aaseo_link_bulk' ); ?>
+					<input type="hidden" name="action" value="aaseo_link_bulk">
+					<?php // 表头勾选框用核心 .check-column 规范:common.js 免费提供"全选/反选" ?>
+					<table class="wp-list-table widefat striped">
+						<thead><tr>
+							<td id="cb" class="manage-column column-cb check-column">
+								<label class="screen-reader-text" for="cb-select-all-1"><?php esc_html_e( 'Select All', 'auto-ai-seo' ); ?></label>
+								<input id="cb-select-all-1" type="checkbox">
 							</td>
-						</tr>
-					<?php endforeach; ?>
-					</tbody>
-				</table>
+							<th><?php esc_html_e( 'In post', 'auto-ai-seo' ); ?></th>
+							<th><?php esc_html_e( 'Anchor in context', 'auto-ai-seo' ); ?></th>
+							<th><?php esc_html_e( 'Links to', 'auto-ai-seo' ); ?></th>
+							<th><?php esc_html_e( 'Score', 'auto-ai-seo' ); ?></th>
+							<th><?php esc_html_e( 'Why', 'auto-ai-seo' ); ?></th>
+							<th><?php esc_html_e( 'Decision', 'auto-ai-seo' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $pending as $row ) : ?>
+							<tr>
+								<th scope="row" class="check-column">
+									<input type="checkbox" name="ids[]" value="<?php echo (int) $row->id; ?>">
+								</th>
+								<td><a href="<?php echo esc_url( get_permalink( (int) $row->source_id ) ); ?>" target="_blank" rel="noopener">
+									<?php echo esc_html( get_the_title( (int) $row->source_id ) ); ?></a></td>
+								<td><?php echo wp_kses( self::anchor_context( $row ), array( 'mark' => array() ) ); ?></td>
+								<td><a href="<?php echo esc_url( get_permalink( (int) $row->target_id ) ); ?>" target="_blank" rel="noopener">
+									<?php echo esc_html( get_the_title( (int) $row->target_id ) ); ?></a></td>
+								<td><?php echo esc_html( $row->relevance . '/5' ); ?></td>
+								<td><span class="description"><?php echo esc_html( $row->reason ); ?></span></td>
+								<td>
+									<?php
+									foreach ( array( 'approve' => __( 'Approve', 'auto-ai-seo' ), 'reject' => __( 'Reject', 'auto-ai-seo' ) ) as $do => $label ) {
+										$url = wp_nonce_url(
+											admin_url( 'admin-post.php?action=aaseo_link&id=' . (int) $row->id . '&do=' . $do ),
+											'aaseo_link_' . (int) $row->id . '_' . $do
+										);
+										printf( '<a class="button button-small" href="%s">%s</a> ', esc_url( $url ), esc_html( $label ) );
+									}
+									?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+					<p style="margin-top:12px">
+						<button class="button button-primary" name="do" value="approve"
+							onclick="return confirm('<?php echo esc_js( __( 'Insert links for ALL selected suggestions?', 'auto-ai-seo' ) ); ?>');">
+							<?php esc_html_e( 'Approve selected', 'auto-ai-seo' ); ?>
+						</button>
+						<button class="button" name="do" value="reject"
+							onclick="return confirm('<?php echo esc_js( __( 'Reject all selected? These pairs will never be suggested again.', 'auto-ai-seo' ) ); ?>');">
+							<?php esc_html_e( 'Reject selected', 'auto-ai-seo' ); ?>
+						</button>
+						<span class="description"><?php esc_html_e( 'Same safeguards as one-by-one: changed posts are skipped as stale, never forced.', 'auto-ai-seo' ); ?></span>
+					</p>
+				</form>
 			<?php endif; ?>
 		</div>
 		<?php
