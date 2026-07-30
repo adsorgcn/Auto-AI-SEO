@@ -23,9 +23,17 @@ class AASEO_Install {
 	}
 
 	public static function deactivate() {
-		// 停用时清掉本插件排在 Action Scheduler 里的待执行任务,免得停用后还在后台跑
+		/*
+		 * 停用 = 用户在喊停。必须**按 group 清**,不能只清工作项的 hook:
+		 * 入队链(aaseo_enqueue_*)挂在另一个 hook 下,只清 aaseo_run_* 会留下
+		 * 一节带着合法版本号的链条 —— 插件一重新启用,它就从原游标接着扫、
+		 * 接着入队、接着花钱,用户根本没按过"开始"。(评审确认的真实路径。)
+		 * group 覆盖了工作项、链节和 requeue_later 的延迟单,一网打尽;
+		 * hook 一条作为无 group 散件的兜底。
+		 */
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
 			foreach ( AASEO_Jobs::instance()->all() as $job ) {
+				as_unschedule_all_actions( '', array(), $job->group() );
 				as_unschedule_all_actions( $job->hook() );
 			}
 		}

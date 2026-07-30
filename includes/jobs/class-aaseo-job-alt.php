@@ -97,11 +97,13 @@ class AASEO_Job_Alt extends AASEO_Job {
 		// 已经有人写过 alt 就不动(人工优先)
 		$existing = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
 		if ( '' !== trim( (string) $existing ) ) {
+			AASEO_Jobs::note_skip( $this->slug(), 'has_value' );
 			return 'skipped';
 		}
 
 		$min_edge = (int) AASEO_Options::job( $this->slug(), 'min_long_edge', 200 );
 		if ( AASEO_Image::is_decorative( $attachment_id, $min_edge ) ) {
+			AASEO_Jobs::note_skip( $this->slug(), 'decorative' );
 			return 'skipped'; // 装饰图,按无障碍规范 alt 应留空
 		}
 
@@ -276,7 +278,10 @@ class AASEO_Job_Alt extends AASEO_Job {
 		}
 		// 复述提示词的迹象
 		foreach ( array( 'alt attribute', 'Output only', 'Article title', 'Surrounding text', 'alt 属性', '只输出' ) as $needle ) {
-			if ( false !== mb_stripos( $text, $needle ) ) {
+			// WP 只填补 mb_strlen/mb_substr,不填补 mb_stripos —— 无 mbstring 的主机会白屏。
+			// 大小写折叠只对 ASCII 针有意义,stripos 兜底不丢正确性。
+			$hit = function_exists( 'mb_stripos' ) ? mb_stripos( $text, $needle ) : stripos( $text, $needle );
+			if ( false !== $hit ) {
 				return array( 'verdict' => 'discard', 'text' => $text, 'why' => 'echo' );
 			}
 		}
@@ -358,7 +363,9 @@ class AASEO_Job_Alt extends AASEO_Job {
 	}
 
 	private function fold( $s ) {
-		$s = mb_strtolower( (string) $s );
+		$s = (string) $s;
+		// 无 mbstring 时退回 strtolower:只折叠 ASCII 大小写,中日韩不受影响 —— 可接受的降级
+		$s = function_exists( 'mb_strtolower' ) ? mb_strtolower( $s ) : strtolower( $s );
 		return trim( preg_replace( '/[\s\p{P}]+/u', '', $s ) );
 	}
 

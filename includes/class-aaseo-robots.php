@@ -39,7 +39,9 @@ class AASEO_Robots {
 	public static function init() {
 		add_filter( 'robots_txt', array( __CLASS__, 'filter_robots_txt' ), 20, 1 );
 		add_filter( 'wp_headers', array( __CLASS__, 'filter_headers' ), 10, 1 );
-		add_filter( 'wp_redirect', array( __CLASS__, 'noindex_external' ), 10, 2 );
+		// PHP_INT_MAX:wp_redirect 是个 filter 链,10 上看到的不是最终地址 ——
+		// 更晚的 filter 可能改写目标(外→内、内→外),按中间值发的头就发错了。挂到最后。
+		add_filter( 'wp_redirect', array( __CLASS__, 'noindex_external' ), PHP_INT_MAX, 2 );
 	}
 
 	// ---------------------------------------------------------------- robots.txt
@@ -130,6 +132,27 @@ class AASEO_Robots {
 			self::merge_rule( $out, $r );
 		}
 
+		/*
+		 * 规范规定:爬虫只遵循**最匹配自己的那一个组** —— 出现了 'User-agent: foo' 组,
+		 * foo 就完全无视所有 'User-agent: *' 规则(包括核心的 /wp-admin/ 和我们的登录规则)。
+		 * 贡献者十有八九没意识到这一点。把 '*' 组的规则复制进每个专属组,
+		 * 让"给某个爬虫加一条规则"不会静默变成"给它豁免其它全部规则"。
+		 */
+		if ( isset( $out['*'] ) && count( $out ) > 1 ) {
+			foreach ( $out as $agent => $paths ) {
+				if ( '*' === $agent ) {
+					continue;
+				}
+				foreach ( array( 'disallow', 'allow' ) as $kind ) {
+					foreach ( $out['*'][ $kind ] as $p ) {
+						if ( ! in_array( $p, $out[ $agent ][ $kind ], true ) ) {
+							$out[ $agent ][ $kind ][] = $p;
+						}
+					}
+				}
+			}
+		}
+
 		return self::enforce_limits( $out );
 	}
 
@@ -195,13 +218,21 @@ class AASEO_Robots {
 		}
 	}
 
-	/** 路径必须以 / 开头、纯 ASCII 可打印、无空白 —— 一个字符不合就整条丢掉 */
+	/**
+	 * 路径必须以 / 开头、纯 ASCII 可打印、无空白,且**只接受普通路径前缀** ——
+	 * 拒收 robots.txt 元字符:
+	 *   '#' 是注释起始,合法路径里不可能出现(fragment 不会发给服务器),
+	 *       放进去等于把后半行静默注释掉;
+	 *   '*' 和 '$' 是通配元字符,而冲突守卫做的是前缀比较 —— 放行通配符,
+	 *       一条 'Disallow: /*' 就能绕过守卫挡住全站(连 noindex 路径一起)。
+	 * 一个字符不合就整条丢掉,不做"善意修剪"。
+	 */
 	private static function sanitize_path( $path ) {
 		$path = (string) $path;
 		if ( '' === $path || '/' !== $path[0] ) {
 			return '';
 		}
-		if ( preg_match( '/[^\x21-\x7e]/', $path ) ) {
+		if ( preg_match( '/[^\x21-\x7e]|[#*$]/', $path ) ) {
 			return '';
 		}
 		return $path;
@@ -380,6 +411,23 @@ class AASEO_Robots {
 		}
 		$path = get_home_path() . 'robots.txt';
 		return file_exists( $path ) ? $path : '';
+	}
+
+	/**
+	 * 物理文件检测在当前上下文是否可信。
+	 *
+	 * CLI 下 get_home_path() 依赖的 SCRIPT_FILENAME 语义完全不同;
+	 * "WordPress 装在自己目录"(home ≠ siteurl 路径)的布局里它会推导出错误目录 ——
+	 * 恰恰是这个函数存在意义所在的布局。检测不可信时如实说"无法判断",
+	 * 好过在最需要警告的布局上静默漏报。
+	 */
+	public static function physical_file_reliable() {
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			$home = (string) wp_parse_url( home_url(), PHP_URL_PATH );
+			$site = (string) wp_parse_url( site_url(), PHP_URL_PATH );
+			return $home === $site;
+		}
+		return function_exists( 'get_home_path' );
 	}
 
 	/** 预览将要输出的块(供 CLI 与后台展示)。不做 output buffering。 */

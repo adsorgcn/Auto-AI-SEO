@@ -77,13 +77,14 @@ class AASEO_Jobs {
 	public function start( $slug, $limit = 0 ) {
 		$job = $this->get( $slug );
 		if ( ! $job ) {
-			return new WP_Error( 'no_job', 'Unknown job: ' . $slug );
+			/* translators: %s: job slug */
+			return new WP_Error( 'no_job', sprintf( __( 'Unknown job: %s', 'auto-ai-seo' ), $slug ) );
 		}
 		if ( ! $job->is_ready() ) {
-			return new WP_Error( 'not_ready', 'Job is not ready to run (API key missing?)' );
+			return new WP_Error( 'not_ready', __( 'Job is not ready to run (API key missing?)', 'auto-ai-seo' ) );
 		}
 		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
-			return new WP_Error( 'no_scheduler', 'Action Scheduler unavailable' );
+			return new WP_Error( 'no_scheduler', __( 'Action Scheduler unavailable.', 'auto-ai-seo' ) );
 		}
 
 		$total = (int) $job->count_candidates();
@@ -137,7 +138,29 @@ class AASEO_Jobs {
 			return;
 		}
 
-		$state = $this->state( $slug );
+		$state  = $this->state( $slug );
+		$status = isset( $state['status'] ) ? $state['status'] : 'idle';
+		/*
+		 * 状态闸门 —— cancel() 只能取消 PENDING 的动作,一条正在 RUNNING 的链节它够不着,
+		 * 那条链节跑完会把整个任务复活。让链条自己看状态:
+		 *   · 已取消(idle)/已完成 → 链条就地断掉;
+		 *   · 暂停 → 把**同一节**推迟重排,恢复后从原游标继续,而不是丢掉剩余的扫描。
+		 */
+		if ( 'paused' === $status ) {
+			if ( function_exists( 'as_schedule_single_action' ) ) {
+				as_schedule_single_action(
+					time() + 300,
+					'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
+					array( 'slug' => $slug, 'cursor' => (int) $cursor, 'v' => self::ENQUEUE_ARGS_VERSION ),
+					$job->group()
+				);
+			}
+			return;
+		}
+		if ( 'running' !== $status ) {
+			return;
+		}
+
 		$limit = isset( $state['limit'] ) ? (int) $state['limit'] : 0;
 		$done  = (int) ( isset( $state['queued'] ) ? $state['queued'] : 0 );
 		if ( $limit > 0 && $done >= $limit ) {
@@ -147,7 +170,16 @@ class AASEO_Jobs {
 		$want = $limit > 0 ? min( self::ENQUEUE_CHUNK, $limit - $done ) : self::ENQUEUE_CHUNK;
 		$ids  = array_map( 'intval', (array) $job->find_candidates( $want, (int) $cursor ) );
 		if ( ! $ids ) {
-			return; // 扫完了
+			/*
+			 * 扫完了 —— 本节就是链条的最后一环,之后不会再有任何入队动作。
+			 * 收尾必须在这里发起:链条按创建顺序执行,这个空扫描总是排在最后一个工作项
+			 * 之后跑;而最后一个工作项调用 maybe_finish 时会看见本动作还挂着(pending),
+			 * 于是放弃 —— 若这里也不收尾,状态就永远停在 running(实测踩过)。
+			 * $terminal=true 让 maybe_finish 跳过"链条还在吗"的检查:本动作自己正 RUNNING,
+			 * 不跳过就会看见自己、永远收不了尾。
+			 */
+			$this->maybe_finish( $slug, true );
+			return;
 		}
 
 		$fresh = 0;
@@ -225,6 +257,7 @@ class AASEO_Jobs {
 
 		if ( is_wp_error( $result ) ) {
 			$this->bump( $slug, 'failed', 1 );
+			$this->maybe_finish( $slug ); // 最后一条恰好失败时,状态也得能走到 done
 			/*
 			 * 抛异常让 Action Scheduler 记进它自己的日志表(工具→Scheduled Actions 可查),
 			 * 并按其重试策略处理。异常消息只进日志、不进页面,但静态分析无法判断这一点,
@@ -239,6 +272,7 @@ class AASEO_Jobs {
 		}
 		if ( 'skipped' === $result ) {
 			$this->bump( $slug, 'skipped', 1 );
+			$this->maybe_finish( $slug ); // 最后一条恰好被跳过时同理
 			return;
 		}
 		$this->bump( $slug, 'done', 1 );
@@ -285,20 +319,29 @@ class AASEO_Jobs {
 		$this->set_state( $slug, array_merge( $s, array( 'status' => 'idle' ) ) );
 	}
 
-	/** 队列里还剩多少条(直接问 Action Scheduler,它才是真相) */
+	/**
+	 * 队列里还剩多少条(直接问 Action Scheduler 的存储层,它才是真相)。
+	 *
+	 * 必须走 Store::query_actions( ..., 'count' ):as_get_scheduled_actions() 没有
+	 * count 返回格式,之前传 'count' 实际得到的是 (int) 数组 —— 永远是 0 或 1,
+	 * 这正是"任务中途被误标为已完成"的根源(实测踩过)。
+	 */
 	public function pending_count( $slug ) {
 		$job = $this->get( $slug );
-		if ( ! $job || ! function_exists( 'as_get_scheduled_actions' ) ) {
+		if ( ! $job || ! class_exists( 'ActionScheduler_Store' ) ) {
 			return 0;
 		}
-		return (int) as_get_scheduled_actions( array(
-			'hook'     => $job->hook(),
-			'status'   => ActionScheduler_Store::STATUS_PENDING,
-			'per_page' => 0,
+		return (int) ActionScheduler_Store::instance()->query_actions( array(
+			'hook'   => $job->hook(),
+			'status' => ActionScheduler_Store::STATUS_PENDING,
 		), 'count' );
 	}
 
-	private function maybe_finish( $slug ) {
+	/**
+	 * @param bool $terminal 由链条最后一环(空扫描)调用时为 true:
+	 *                       那一环自己正处于 RUNNING,链条检查会看见自己,必须跳过。
+	 */
+	private function maybe_finish( $slug, $terminal = false ) {
 		if ( 0 !== $this->pending_count( $slug ) ) {
 			return;
 		}
@@ -306,11 +349,16 @@ class AASEO_Jobs {
 		 * 工作项排空 ≠ 干完了:入队链是分批的,这一批跑完时下一批往往还挂在队列上。
 		 * 只看工作项就会在中途报"已完成",而其实还有几百条没入队 —— 实测见过。
 		 */
-		if ( function_exists( 'as_has_scheduled_action' )
+		if ( ! $terminal
+			&& function_exists( 'as_has_scheduled_action' )
 			&& as_has_scheduled_action( 'aaseo_enqueue_' . str_replace( '-', '_', $slug ) ) ) {
 			return;
 		}
 		$s = $this->state( $slug );
+		// 只从 running 走向 done —— 不去覆盖 paused/idle(那是用户的显式操作)
+		if ( 'running' !== ( isset( $s['status'] ) ? $s['status'] : '' ) ) {
+			return;
+		}
 		$this->set_state( $slug, array_merge( $s, array(
 			'status'   => 'done',
 			'finished' => current_time( 'mysql', true ),

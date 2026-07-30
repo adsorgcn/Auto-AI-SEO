@@ -154,6 +154,9 @@ class AASEO_CLI {
 			WP_CLI::confirm( 'Proceed?', $assoc );
 		}
 
+		// 快照累计值:skip/repair 记在持久状态里,不快照就会把历史累计当成本次结果报出来
+		$before = AASEO_Jobs::state( $slug );
+
 		$progress = WP_CLI\Utils\make_progress_bar( $job->label(), $total );
 		$done     = $failed = $skipped = $n = 0;
 		$cursor   = 0; // 0 = 从头;之后每批取"键 < 上批最小键",与后台队列同一套游标语义
@@ -207,18 +210,21 @@ class AASEO_CLI {
 			$done, $skipped, $failed,
 			number_format( $spent['tokens'] ), AASEO_Usage::format_money( $spent['micro'] )
 		) );
-		// 跳过的原因说清楚,而不是丢一个数字让人猜
-		$state = AASEO_Jobs::state( $slug );
-		if ( ! empty( $state['skip_reasons'] ) ) {
-			$why = AASEO_Jobs::skip_explanations();
-			foreach ( (array) $state['skip_reasons'] as $reason => $n ) {
-				WP_CLI::log( sprintf( '  %d skipped × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
-			}
-		}
-		if ( ! empty( $state['repairs'] ) ) {
-			$why = AASEO_Jobs::repair_explanations();
-			foreach ( (array) $state['repairs'] as $reason => $n ) {
-				WP_CLI::log( sprintf( '  %d rewritten × %s', $n, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
+		// 跳过的原因说清楚,而且只报**本次**的增量 —— 状态里存的是累计值
+		$state   = AASEO_Jobs::state( $slug );
+		$buckets = array(
+			'skip_reasons' => array( 'skipped', AASEO_Jobs::skip_explanations() ),
+			'repairs'      => array( 'rewritten', AASEO_Jobs::repair_explanations() ),
+		);
+		foreach ( $buckets as $bucket => $meta ) {
+			list( $verb, $why ) = $meta;
+			$now  = ! empty( $state[ $bucket ] ) ? (array) $state[ $bucket ] : array();
+			$then = ! empty( $before[ $bucket ] ) ? (array) $before[ $bucket ] : array();
+			foreach ( $now as $reason => $n ) {
+				$delta = (int) $n - (int) ( isset( $then[ $reason ] ) ? $then[ $reason ] : 0 );
+				if ( $delta > 0 ) {
+					WP_CLI::log( sprintf( '  %d %s × %s', $delta, $verb, isset( $why[ $reason ] ) ? $why[ $reason ] : $reason ) );
+				}
 			}
 		}
 	}
@@ -280,6 +286,10 @@ class AASEO_CLI {
 				'A real file exists at %s — the web server serves it and WordPress rules never apply. Edit or remove it yourself; this plugin will not touch it.',
 				$p['physical_file']
 			) );
+		} elseif ( ! AASEO_Robots::physical_file_reliable() ) {
+			// CLI 下 get_home_path() 在"WP 装在自己目录"的布局会推导出错误目录 ——
+			// 恰恰是最需要这个警告的布局。检测不可信就直说,不装作"没有物理文件"。
+			WP_CLI::log( 'physical robots.txt: cannot be reliably detected from CLI on this layout — check the web root manually.' );
 		}
 		WP_CLI::log( '' );
 		WP_CLI::log( '--- block this plugin appends ---' );

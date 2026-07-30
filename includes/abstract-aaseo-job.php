@@ -59,8 +59,12 @@ abstract class AASEO_Job {
 	/**
 	 * 处理单个对象。
 	 *
+	 * 返回 WP_Error 时骨架记一次失败并写进 Action Scheduler 日志。**没有自动重试**,
+	 * 也不需要:候选集的定义是"还没处理成功的对象",失败的对象仍留在集合里,
+	 * 下一次运行自然会再处理它 —— 候选集本身就是重试机制。
+	 *
 	 * @param int $object_id
-	 * @return true|WP_Error  返回 WP_Error 时骨架会记失败并按策略重试
+	 * @return true|'skipped'|WP_Error
 	 */
 	abstract public function handle_one( $object_id );
 
@@ -72,11 +76,6 @@ abstract class AASEO_Job {
 	/** 这个模块用视觉模型还是文本模型 */
 	public function model_kind() {
 		return 'text'; // 'text' | 'vision'
-	}
-
-	/** 处理失败最多重试几次 */
-	public function max_attempts() {
-		return 2;
 	}
 
 	/** 是否已具备运行条件(如需要 API key) */

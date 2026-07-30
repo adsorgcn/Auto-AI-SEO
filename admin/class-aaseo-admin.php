@@ -154,7 +154,7 @@ class AASEO_Admin {
 				<div class="notice notice-success"><p><?php esc_html_e( 'Settings saved.', 'auto-ai-seo' ); ?></p></div>
 			<?php endif; ?>
 			<?php if ( '' !== $msg ) : ?>
-				<div class="notice notice-info"><p><?php echo esc_html( $msg ); ?></p></div>
+				<div class="notice notice-info"><p><?php echo esc_html( self::notice_label( $msg ) ); ?></p></div>
 			<?php endif; ?>
 			<?php if ( ! AASEO_Options::is_configured() ) : ?>
 				<div class="notice notice-warning"><p>
@@ -203,9 +203,9 @@ class AASEO_Admin {
 				<input type="hidden" name="action" value="aaseo_save">
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e( 'API key', 'auto-ai-seo' ); ?></th>
+						<th scope="row"><label for="aaseo-api-key"><?php esc_html_e( 'API key', 'auto-ai-seo' ); ?></label></th>
 						<td>
-							<input type="password" name="api_key" class="regular-text" autocomplete="new-password"
+							<input id="aaseo-api-key" type="password" name="api_key" class="regular-text" autocomplete="new-password"
 								placeholder="<?php echo esc_attr( $o['api_key'] ? __( 'Saved — leave blank to keep', 'auto-ai-seo' ) : 'sk-...' ); ?>">
 							<p class="description">
 								<?php
@@ -219,28 +219,28 @@ class AASEO_Admin {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'API base URL', 'auto-ai-seo' ); ?></th>
-						<td><input type="url" name="api_base" class="regular-text" value="<?php echo esc_attr( $o['api_base'] ); ?>">
+						<th scope="row"><label for="aaseo-api-base"><?php esc_html_e( 'API base URL', 'auto-ai-seo' ); ?></label></th>
+						<td><input id="aaseo-api-base" type="url" name="api_base" class="regular-text" value="<?php echo esc_attr( $o['api_base'] ); ?>">
 							<p class="description"><?php esc_html_e( 'HTTPS only.', 'auto-ai-seo' ); ?></p></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Vision models', 'auto-ai-seo' ); ?></th>
-						<td><textarea name="vision_models" rows="3" class="large-text code"><?php echo esc_textarea( implode( "\n", (array) $o['vision_models'] ) ); ?></textarea>
+						<th scope="row"><label for="aaseo-vision-models"><?php esc_html_e( 'Vision models', 'auto-ai-seo' ); ?></label></th>
+						<td><textarea id="aaseo-vision-models" name="vision_models" rows="3" class="large-text code"><?php echo esc_textarea( implode( "\n", (array) $o['vision_models'] ) ); ?></textarea>
 							<p class="description"><?php esc_html_e( 'One per line, in priority order. If one is unavailable the next is used automatically.', 'auto-ai-seo' ); ?></p></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Text models', 'auto-ai-seo' ); ?></th>
-						<td><textarea name="text_models" rows="3" class="large-text code"><?php echo esc_textarea( implode( "\n", (array) $o['text_models'] ) ); ?></textarea></td>
+						<th scope="row"><label for="aaseo-text-models"><?php esc_html_e( 'Text models', 'auto-ai-seo' ); ?></label></th>
+						<td><textarea id="aaseo-text-models" name="text_models" rows="3" class="large-text code"><?php echo esc_textarea( implode( "\n", (array) $o['text_models'] ) ); ?></textarea></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Daily token cap', 'auto-ai-seo' ); ?></th>
-						<td><input type="number" name="daily_token_cap" min="0" step="10000" class="regular-text"
+						<th scope="row"><label for="aaseo-daily-cap"><?php esc_html_e( 'Daily token cap', 'auto-ai-seo' ); ?></label></th>
+						<td><input id="aaseo-daily-cap" type="number" name="daily_token_cap" min="0" step="10000" class="regular-text"
 								value="<?php echo esc_attr( (int) $o['daily_token_cap'] ); ?>">
 							<p class="description"><?php esc_html_e( 'Batches stop when the cap is hit and continue the next day. 0 = no cap.', 'auto-ai-seo' ); ?></p></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Site context', 'auto-ai-seo' ); ?></th>
-						<td><textarea name="site_context" rows="3" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Tech review blog; recurring brands: xiaomi, dji, anker', 'auto-ai-seo' ); ?>"><?php echo esc_textarea( $o['site_context'] ); ?></textarea>
+						<th scope="row"><label for="aaseo-site-context"><?php esc_html_e( 'Site context', 'auto-ai-seo' ); ?></label></th>
+						<td><textarea id="aaseo-site-context" name="site_context" rows="3" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Tech review blog; recurring brands: xiaomi, dji, anker', 'auto-ai-seo' ); ?>"><?php echo esc_textarea( $o['site_context'] ); ?></textarea>
 							<p class="description"><?php esc_html_e( 'Describing your niche and recurring proper nouns noticeably improves accuracy.', 'auto-ai-seo' ); ?></p></td>
 					</tr>
 					<tr>
@@ -292,10 +292,11 @@ class AASEO_Admin {
 			echo '<td>' . esc_html( number_format_i18n( $job->count_candidates() ) ) . '</td>';
 			echo '<td>' . esc_html( sprintf( '%d / %d', (int) $s['done'], (int) $s['queued'] ) );
 			if ( (int) $s['failed'] ) {
-				echo ' <span style="color:#b32d2e">' . esc_html( sprintf( '(%d failed)', (int) $s['failed'] ) ) . '</span>';
+				/* translators: %d: number of failed items */
+				echo ' <span style="color:#b32d2e">' . esc_html( sprintf( __( '(%d failed)', 'auto-ai-seo' ), (int) $s['failed'] ) ) . '</span>';
 			}
 			echo '</td>';
-			echo '<td>' . esc_html( $status );
+			echo '<td>' . esc_html( self::status_label( $status ) );
 			if ( ! empty( $s['note'] ) ) {
 				echo '<br><span class="description">' . esc_html( $s['note'] ) . '</span>';
 			}
@@ -388,6 +389,28 @@ class AASEO_Admin {
 		echo '</td></tr>';
 
 		echo '</tbody></table>';
+	}
+
+	/** 操作回执 slug → 人话。URL 里传 slug 是刻意的:链接与语言无关,翻译发生在渲染时。 */
+	private static function notice_label( $msg ) {
+		$map = array(
+			'started'   => __( 'Task started.', 'auto-ai-seo' ),
+			'paused'    => __( 'Task paused.', 'auto-ai-seo' ),
+			'resumed'   => __( 'Task resumed.', 'auto-ai-seo' ),
+			'cancelled' => __( 'Queued actions cancelled.', 'auto-ai-seo' ),
+		);
+		return isset( $map[ $msg ] ) ? $map[ $msg ] : $msg;
+	}
+
+	/** 状态 slug → 人话(slug 是内部值,不能直接喂给用户) */
+	private static function status_label( $status ) {
+		$map = array(
+			'idle'    => __( 'idle', 'auto-ai-seo' ),
+			'running' => __( 'running', 'auto-ai-seo' ),
+			'paused'  => __( 'paused', 'auto-ai-seo' ),
+			'done'    => __( 'done', 'auto-ai-seo' ),
+		);
+		return isset( $map[ $status ] ) ? $map[ $status ] : $status;
 	}
 
 	private static function actions_for( $status ) {

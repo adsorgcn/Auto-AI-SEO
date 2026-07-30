@@ -161,7 +161,12 @@ class AASEO_Image {
 		}
 		// 用文件名定位(经 CDN 改写后完整 URL 常常对不上,文件名更稳)
 		$stem = preg_replace( '/\.[a-z0-9]+$/i', '', $file );
-		$pos  = $stem ? mb_strpos( $content, $stem ) : false;
+		// 文件名 stem 是 ASCII(URL 安全字符),字节级 strpos 在 UTF-8 上定位它同样正确 ——
+		// mb_strpos 返回的是字符偏移,恰好配合下面 mb_substr 用;无 mbstring 时两者一起退回字节版
+		$pos = false;
+		if ( $stem ) {
+			$pos = function_exists( 'mb_strpos' ) ? mb_strpos( $content, $stem ) : strpos( $content, $stem );
+		}
 		if ( false === $pos ) {
 			return '';
 		}

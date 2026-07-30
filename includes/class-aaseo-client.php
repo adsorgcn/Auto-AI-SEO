@@ -97,7 +97,17 @@ class AASEO_Client {
 				return $res;
 			}
 
-			AASEO_Usage::record( $args['job'], $model, 0, 0, $seconds, false );
+			// 失败也可能花了钱(空输出/被截断的调用照样计费)—— 有实际用量就照实记
+			$err_data = $res->get_error_data();
+			$spent    = isset( $err_data['usage'] ) && is_array( $err_data['usage'] ) ? $err_data['usage'] : array();
+			AASEO_Usage::record(
+				$args['job'],
+				$model,
+				isset( $spent['prompt_tokens'] ) ? (int) $spent['prompt_tokens'] : 0,
+				isset( $spent['completion_tokens'] ) ? (int) $spent['completion_tokens'] : 0,
+				$seconds,
+				false
+			);
 			AASEO_Probe::note_failure( $args['kind'], $model, $res->get_error_code() );
 			$last = $res;
 		}
@@ -195,11 +205,17 @@ class AASEO_Client {
 
 		$choice = isset( $json['choices'][0] ) ? $json['choices'][0] : array();
 		$text   = isset( $choice['message']['content'] ) ? trim( (string) $choice['message']['content'] ) : '';
+		// 空输出/被截断也是**花了钱的**调用 —— usage 附在错误数据上,让上层照实记账,
+		// 否则每日配额和成本面板会漏掉这部分真实消耗。
+		$spent = array(
+			'prompt_tokens'     => isset( $json['usage']['prompt_tokens'] ) ? (int) $json['usage']['prompt_tokens'] : 0,
+			'completion_tokens' => isset( $json['usage']['completion_tokens'] ) ? (int) $json['usage']['completion_tokens'] : 0,
+		);
 		if ( '' === $text ) {
-			return new WP_Error( 'empty', __( 'Model returned no content.', 'auto-ai-seo' ) );
+			return new WP_Error( 'empty', __( 'Model returned no content.', 'auto-ai-seo' ), array( 'usage' => $spent ) );
 		}
 		if ( isset( $choice['finish_reason'] ) && 'length' === $choice['finish_reason'] ) {
-			return new WP_Error( 'truncated', __( 'Output truncated by max_tokens.', 'auto-ai-seo' ) );
+			return new WP_Error( 'truncated', __( 'Output truncated by max_tokens.', 'auto-ai-seo' ), array( 'usage' => $spent ) );
 		}
 
 		$usage = isset( $json['usage'] ) ? $json['usage'] : array();
@@ -216,12 +232,19 @@ class AASEO_Client {
 	/**
 	 * 清洗模型输出:剥掉代码块、引号、内部控制标记,只取第一行。
 	 * 实测有模型会输出 <|begin_of_box|> 这类内部标记,不清洗会直接写进页面。
+	 *
+	 * 首尾引号必须用 /u 正则剥,**绝不能用 trim() 的字符清单**:
+	 * trim() 的清单是按字节算的,「」《》 会贡献 {E3,80,8A,8B,8C,8D} 这些字节 ——
+	 * 于是以"一"(E4 B8 80)结尾的中文丢掉末字节、以假名(E3 xx xx)开头的日文丢掉首字节,
+	 * 产出非法 UTF-8。后果链:/u 正则全部返回 false → 语言判定误报 → 白烧一次修补调用
+	 * → 修补结果再次被腐蚀 → 最终这张图永远拿不到 alt,每次尝试浪费 3-4 次付费调用。
 	 */
 	public static function clean( $text ) {
 		$text = (string) $text;
 		$text = preg_replace( '/<\|[^|]*\|>/u', '', $text );          // <|begin_of_box|> 等
 		$text = preg_replace( '/^```[a-z]*\s*|\s*```$/mu', '', $text );
 		$text = trim( strtok( $text, "\n" ) );
-		return trim( $text, " \t\"'`「」《》" );
+		$text = (string) preg_replace( '/^[\s"\'`「」『』《》]+|[\s"\'`「」『』《》]+$/u', '', $text );
+		return trim( $text );
 	}
 }
