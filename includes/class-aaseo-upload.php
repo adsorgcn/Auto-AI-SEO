@@ -49,91 +49,97 @@ class AASEO_Upload {
 
 	private static function paste_js( array $cfg ) {
 		$json = wp_json_encode( $cfg );
-		// 保持零依赖(除 jQuery 的事件桥):TinyMCE 可视模式与文本模式都要接住
-		return <<<JS
-(function () {
-	var cfg = {$json};
-
-	function upload( file, onDone, onFail ) {
-		var fd = new FormData();
-		// 粘贴内容多为无名 blob,给个机器名形态让服务端知道"该由 AI 命名"
-		var ext = ( file.type.split( '/' )[1] || 'png' ).replace( 'jpeg', 'jpg' );
-		fd.append( 'file', file, ( file.name && file.name !== 'image.png' ? file.name : 'pasted-' + Date.now() + '.' + ext ) );
-		if ( cfg.post ) { fd.append( 'post', cfg.post ); }
-		var xhr = new XMLHttpRequest();
-		xhr.open( 'POST', cfg.endpoint );
-		xhr.setRequestHeader( 'X-WP-Nonce', cfg.nonce );
-		xhr.onload = function () {
-			if ( xhr.status >= 200 && xhr.status < 300 ) {
-				try { onDone( JSON.parse( xhr.responseText ) ); return; } catch ( e ) {}
-			}
-			onFail( 'HTTP ' + xhr.status );
-		};
-		xhr.onerror = function () { onFail( 'network' ); };
-		xhr.send( fd );
-	}
-
-	function imgHtml( media ) {
-		var alt = ( media.alt_text || '' ).replace( /"/g, '&quot;' );
-		return '<img src="' + media.source_url + '" alt="' + alt + '" class="alignnone size-full wp-image-' + media.id + '" />';
-	}
-
-	function grabImages( ev ) {
-		var dt = ev.clipboardData || ( ev.originalEvent && ev.originalEvent.clipboardData );
-		if ( ! dt || ! dt.items ) { return []; }
-		var files = [];
-		for ( var i = 0; i < dt.items.length; i++ ) {
-			if ( dt.items[ i ].kind === 'file' && dt.items[ i ].type.indexOf( 'image/' ) === 0 ) {
-				var f = dt.items[ i ].getAsFile();
-				if ( f ) { files.push( f ); }
-			}
-		}
-		return files;
-	}
-
-	// —— 可视模式(TinyMCE):占位符插在光标处,传完原地替换 ——
-	if ( window.jQuery ) {
-		jQuery( document ).on( 'tinymce-editor-init', function ( _e, editor ) {
-			editor.on( 'paste', function ( ev ) {
-				var files = grabImages( ev );
-				if ( ! files.length ) { return; } // 纯文本粘贴不拦
-				ev.preventDefault();
-				files.forEach( function ( f ) {
-					var ph = 'aaseo-ph-' + Math.random().toString( 36 ).slice( 2 );
-					editor.insertContent( '<span id="' + ph + '">⏳ 图片上传中…</span>' );
-					upload( f, function ( media ) {
-						var el = editor.dom.get( ph );
-						if ( el ) { editor.dom.setOuterHTML( el, imgHtml( media ) ); }
-					}, function ( why ) {
-						var el = editor.dom.get( ph );
-						if ( el ) { editor.dom.setOuterHTML( el, '<span style="color:#b32d2e">图片上传失败(' + why + ')</span>' ); }
-					} );
-				} );
-			} );
-		} );
-	}
-
-	// —— 文本模式(textarea#content):在光标处插占位文本,完成后替换 ——
-	document.addEventListener( 'paste', function ( ev ) {
-		var ta = ev.target;
-		if ( ! ta || ta.id !== 'content' || ta.tagName !== 'TEXTAREA' ) { return; }
-		var files = grabImages( ev );
-		if ( ! files.length ) { return; }
-		ev.preventDefault();
-		files.forEach( function ( f ) {
-			var ph = '[图片上传中 ' + Math.random().toString( 36 ).slice( 2, 7 ) + ']';
-			var s = ta.selectionStart, e = ta.selectionEnd;
-			ta.value = ta.value.slice( 0, s ) + ph + ta.value.slice( e );
-			ta.selectionStart = ta.selectionEnd = s + ph.length;
-			upload( f, function ( media ) {
-				ta.value = ta.value.replace( ph, imgHtml( media ) );
-			}, function ( why ) {
-				ta.value = ta.value.replace( ph, '[图片上传失败: ' + why + ']' );
-			} );
-		} );
-	} );
-})();
-JS;
+		/*
+		 * 拼接而不用 heredoc:wp.org 的 Plugin Check 明确禁止 heredoc 语法
+		 * (PluginCheck.CodeAnalysis.Heredoc.NotAllowed)。零依赖(除 jQuery 事件桥),
+		 * TinyMCE 可视模式与文本模式都要接住。
+		 */
+		$js = array(
+			'(function () {',
+			'	var cfg = {{CFG}};',
+			'',
+			'	function upload( file, onDone, onFail ) {',
+			'		var fd = new FormData();',
+			'		// 粘贴内容多为无名 blob,给个机器名形态让服务端知道"该由 AI 命名"',
+			'		var ext = ( file.type.split( \'/\' )[1] || \'png\' ).replace( \'jpeg\', \'jpg\' );',
+			'		fd.append( \'file\', file, ( file.name && file.name !== \'image.png\' ? file.name : \'pasted-\' + Date.now() + \'.\' + ext ) );',
+			'		if ( cfg.post ) { fd.append( \'post\', cfg.post ); }',
+			'		var xhr = new XMLHttpRequest();',
+			'		xhr.open( \'POST\', cfg.endpoint );',
+			'		xhr.setRequestHeader( \'X-WP-Nonce\', cfg.nonce );',
+			'		xhr.onload = function () {',
+			'			if ( xhr.status >= 200 && xhr.status < 300 ) {',
+			'				try { onDone( JSON.parse( xhr.responseText ) ); return; } catch ( e ) {}',
+			'			}',
+			'			onFail( \'HTTP \' + xhr.status );',
+			'		};',
+			'		xhr.onerror = function () { onFail( \'network\' ); };',
+			'		xhr.send( fd );',
+			'	}',
+			'',
+			'	function imgHtml( media ) {',
+			'		var alt = ( media.alt_text || \'\' ).replace( /"/g, \'&quot;\' );',
+			'		return \'<img src="\' + media.source_url + \'" alt="\' + alt + \'" class="alignnone size-full wp-image-\' + media.id + \'" />\';',
+			'	}',
+			'',
+			'	function grabImages( ev ) {',
+			'		var dt = ev.clipboardData || ( ev.originalEvent && ev.originalEvent.clipboardData );',
+			'		if ( ! dt || ! dt.items ) { return []; }',
+			'		var files = [];',
+			'		for ( var i = 0; i < dt.items.length; i++ ) {',
+			'			if ( dt.items[ i ].kind === \'file\' && dt.items[ i ].type.indexOf( \'image/\' ) === 0 ) {',
+			'				var f = dt.items[ i ].getAsFile();',
+			'				if ( f ) { files.push( f ); }',
+			'			}',
+			'		}',
+			'		return files;',
+			'	}',
+			'',
+			'	// —— 可视模式(TinyMCE):占位符插在光标处,传完原地替换 ——',
+			'	if ( window.jQuery ) {',
+			'		jQuery( document ).on( \'tinymce-editor-init\', function ( _e, editor ) {',
+			'			editor.on( \'paste\', function ( ev ) {',
+			'				var files = grabImages( ev );',
+			'				if ( ! files.length ) { return; } // 纯文本粘贴不拦',
+			'				ev.preventDefault();',
+			'				files.forEach( function ( f ) {',
+			'					var ph = \'aaseo-ph-\' + Math.random().toString( 36 ).slice( 2 );',
+			'					editor.insertContent( \'<span id="\' + ph + \'">⏳ 图片上传中…</span>\' );',
+			'					upload( f, function ( media ) {',
+			'						var el = editor.dom.get( ph );',
+			'						if ( el ) { editor.dom.setOuterHTML( el, imgHtml( media ) ); }',
+			'					}, function ( why ) {',
+			'						var el = editor.dom.get( ph );',
+			'						if ( el ) { editor.dom.setOuterHTML( el, \'<span style="color:#b32d2e">图片上传失败(\' + why + \')</span>\' ); }',
+			'					} );',
+			'				} );',
+			'			} );',
+			'		} );',
+			'	}',
+			'',
+			'	// —— 文本模式(textarea#content):在光标处插占位文本,完成后替换 ——',
+			'	document.addEventListener( \'paste\', function ( ev ) {',
+			'		var ta = ev.target;',
+			'		if ( ! ta || ta.id !== \'content\' || ta.tagName !== \'TEXTAREA\' ) { return; }',
+			'		var files = grabImages( ev );',
+			'		if ( ! files.length ) { return; }',
+			'		ev.preventDefault();',
+			'		files.forEach( function ( f ) {',
+			'			var ph = \'[图片上传中 \' + Math.random().toString( 36 ).slice( 2, 7 ) + \']\';',
+			'			var s = ta.selectionStart, e = ta.selectionEnd;',
+			'			ta.value = ta.value.slice( 0, s ) + ph + ta.value.slice( e );',
+			'			ta.selectionStart = ta.selectionEnd = s + ph.length;',
+			'			upload( f, function ( media ) {',
+			'				ta.value = ta.value.replace( ph, imgHtml( media ) );',
+			'			}, function ( why ) {',
+			'				ta.value = ta.value.replace( ph, \'[图片上传失败: \' + why + \']\' );',
+			'			} );',
+			'		} );',
+			'	} );',
+			'})();',
+		);
+		return str_replace( '{{CFG}}', $json, implode( "
+", $js ) );
 	}
 
 	private static function enabled() {
