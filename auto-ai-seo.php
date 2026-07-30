@@ -38,7 +38,9 @@ require_once AASEO_DIR . 'includes/class-aaseo-image.php';
 require_once AASEO_DIR . 'includes/abstract-aaseo-job.php';
 require_once AASEO_DIR . 'includes/class-aaseo-jobs.php';
 require_once AASEO_DIR . 'includes/class-aaseo-robots.php';
+require_once AASEO_DIR . 'includes/class-aaseo-meta.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
+require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-meta.php';
 
 register_activation_hook( __FILE__, array( 'AASEO_Install', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'AASEO_Install', 'deactivate' ) );
@@ -51,6 +53,7 @@ function aaseo_boot() {
 	AASEO_Jobs::init();
 	// 机械模块:不进队列,直接挂钩子(它没有候选集,也不花 token)
 	AASEO_Robots::init();
+	AASEO_Meta::init();
 
 	if ( is_admin() ) {
 		require_once AASEO_DIR . 'admin/class-aaseo-admin.php';
@@ -70,6 +73,7 @@ add_action( 'aaseo_register_jobs', 'aaseo_register_builtin_jobs' );
 
 function aaseo_register_builtin_jobs( $registry ) {
 	$registry->register( new AASEO_Job_Alt() );
+	$registry->register( new AASEO_Job_Meta() );
 }
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

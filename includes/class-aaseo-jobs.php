@@ -403,6 +403,9 @@ class AASEO_Jobs {
 			'missing_file' => __( 'image file no longer exists on disk (orphaned attachment record — safe to clean up)', 'auto-ai-seo' ),
 			'decorative'   => __( 'too small to be meaningful content (logo/icon — alt is intentionally left empty)', 'auto-ai-seo' ),
 			'has_value'    => __( 'already written by a human — left untouched', 'auto-ai-seo' ),
+			'desc_ok'      => __( 'existing description already does its job (AI-judged) — left untouched', 'auto-ai-seo' ),
+			'no_content'   => __( 'post has no content to describe', 'auto-ai-seo' ),
+			'gone'         => __( 'post no longer exists or is not published', 'auto-ai-seo' ),
 		);
 	}
 
