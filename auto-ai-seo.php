@@ -41,6 +41,7 @@ require_once AASEO_DIR . 'includes/class-aaseo-robots.php';
 require_once AASEO_DIR . 'includes/class-aaseo-meta.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-meta.php';
+require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-term.php';
 
 register_activation_hook( __FILE__, array( 'AASEO_Install', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'AASEO_Install', 'deactivate' ) );
@@ -74,6 +75,7 @@ add_action( 'aaseo_register_jobs', 'aaseo_register_builtin_jobs' );
 function aaseo_register_builtin_jobs( $registry ) {
 	$registry->register( new AASEO_Job_Alt() );
 	$registry->register( new AASEO_Job_Meta() );
+	$registry->register( new AASEO_Job_Term() );
 }
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

@@ -406,6 +406,7 @@ class AASEO_Jobs {
 			'desc_ok'      => __( 'existing description already does its job (AI-judged) — left untouched', 'auto-ai-seo' ),
 			'no_content'   => __( 'post has no content to describe', 'auto-ai-seo' ),
 			'gone'         => __( 'post no longer exists or is not published', 'auto-ai-seo' ),
+			'thin'         => __( 'too few posts to be worth describing (threshold configurable)', 'auto-ai-seo' ),
 		);
 	}
 

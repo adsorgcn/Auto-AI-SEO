@@ -26,6 +26,8 @@ class AASEO_Meta {
 		// 优先级 2:排在常规输出前,但让主题(JustNews 用 1)先行 —— 主题输出时这里应当关闭
 		add_action( 'wp_head', array( __CLASS__, 'output_tag' ), 2 );
 		add_action( 'save_post', array( __CLASS__, 'invalidate' ), 10, 2 );
+		// term 被人工编辑 → 判定作废,重新入列(update_term_meta 不触发 edited_term,无循环)
+		add_action( 'edited_term', array( __CLASS__, 'invalidate_term' ) );
 	}
 
 	/**
@@ -36,6 +38,13 @@ class AASEO_Meta {
 	 */
 	public static function meta_key() {
 		$key = apply_filters( 'aaseo_description_meta_key', '_aaseo_description' );
+		$key = is_string( $key ) ? sanitize_key( $key ) : '';
+		return '' !== $key ? $key : '_aaseo_description';
+	}
+
+	/** 归档页描述写到哪个 term meta 键(同上,分开过滤 —— 两边的原生字段未必同名) */
+	public static function term_meta_key() {
+		$key = apply_filters( 'aaseo_term_description_meta_key', '_aaseo_description' );
 		$key = is_string( $key ) ? sanitize_key( $key ) : '';
 		return '' !== $key ? $key : '_aaseo_description';
 	}
@@ -62,18 +71,28 @@ class AASEO_Meta {
 	 *   add_filter( 'aaseo_output_description_tag', '__return_false' );
 	 */
 	public static function output_tag() {
-		if ( ! is_singular() ) {
-			return;
-		}
 		$enabled = (bool) AASEO_Options::job( 'meta', 'output_tag', true );
 		if ( ! apply_filters( 'aaseo_output_description_tag', $enabled ) ) {
 			return;
 		}
-		$desc = self::get( get_queried_object_id() );
+		$desc = '';
+		if ( is_singular() ) {
+			$desc = self::get( get_queried_object_id() );
+		} elseif ( is_category() || is_tag() || is_tax() ) {
+			$term = get_queried_object();
+			if ( $term && ! is_wp_error( $term ) ) {
+				$desc = trim( (string) get_term_meta( $term->term_id, self::term_meta_key(), true ) );
+			}
+		}
 		if ( '' === $desc ) {
 			return;
 		}
 		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
+	}
+
+	/** term 被人工编辑 → 清判定标记,重新进入候选集 */
+	public static function invalidate_term( $term_id ) {
+		delete_term_meta( (int) $term_id, self::JUDGED_KEY );
 	}
 
 	/**
