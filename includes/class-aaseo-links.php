@@ -27,9 +27,8 @@ class AASEO_Links {
 	/** 同一对 source→target 只允许存在一条记录,含已拒绝的 —— 拒过的永不再提 */
 	public static function pair_exists( $source_id, $target_id ) {
 		global $wpdb;
-		$t = self::table();
 		return (bool) $wpdb->get_var( $wpdb->prepare(
-			"SELECT id FROM {$t} WHERE source_id = %d AND target_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			"SELECT id FROM {$wpdb->prefix}aaseo_links WHERE source_id = %d AND target_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$source_id,
 			$target_id
 		) );
@@ -53,9 +52,8 @@ class AASEO_Links {
 
 	public static function get( $id ) {
 		global $wpdb;
-		$t = self::table();
 		return $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM {$t} WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			"SELECT * FROM {$wpdb->prefix}aaseo_links WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$id
 		) );
 	}
@@ -63,17 +61,15 @@ class AASEO_Links {
 	/** @return object[] */
 	public static function pending( $limit = 100 ) {
 		global $wpdb;
-		$t = self::table();
 		return (array) $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM {$t} WHERE status = 'pending' ORDER BY relevance DESC, id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			"SELECT * FROM {$wpdb->prefix}aaseo_links WHERE status = 'pending' ORDER BY relevance DESC, id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$limit
 		) );
 	}
 
 	public static function counts() {
 		global $wpdb;
-		$t    = self::table();
-		$rows = (array) $wpdb->get_results( "SELECT status, COUNT(*) n FROM {$t} GROUP BY status" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = (array) $wpdb->get_results( "SELECT status, COUNT(*) n FROM {$wpdb->prefix}aaseo_links GROUP BY status" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$out  = array();
 		foreach ( $rows as $r ) {
 			$out[ $r->status ] = (int) $r->n;
