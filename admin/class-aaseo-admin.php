@@ -16,6 +16,7 @@ class AASEO_Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_aaseo_save', array( __CLASS__, 'save' ) );
 		add_action( 'admin_post_aaseo_job', array( __CLASS__, 'job_action' ) );
+		add_action( 'admin_post_aaseo_link', array( __CLASS__, 'link_action' ) );
 	}
 
 	public static function menu() {
@@ -25,6 +26,17 @@ class AASEO_Admin {
 			self::CAP, self::SLUG,
 			array( __CLASS__, 'render' ),
 			'dashicons-search', 81
+		);
+		$counts  = AASEO_Links::counts();
+		$pending = isset( $counts['pending'] ) ? (int) $counts['pending'] : 0;
+		add_submenu_page(
+			self::SLUG,
+			__( 'Internal links', 'auto-ai-seo' ),
+			__( 'Internal links', 'auto-ai-seo' )
+				. ( $pending ? ' <span class="awaiting-mod">' . esc_html( number_format_i18n( $pending ) ) . '</span>' : '' ),
+			self::CAP,
+			self::SLUG . '-links',
+			array( __CLASS__, 'render_links_page' )
 		);
 	}
 
@@ -391,6 +403,119 @@ class AASEO_Admin {
 		echo '</tbody></table>';
 	}
 
+	// ---------------------------------------------------------------- 内链审核
+
+	/** 批准/拒绝一条内链建议 */
+	public static function link_action() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'auto-ai-seo' ) );
+		}
+		$id = isset( $_REQUEST['id'] ) ? (int) $_REQUEST['id'] : 0;
+		$do = isset( $_REQUEST['do'] ) ? sanitize_key( wp_unslash( $_REQUEST['do'] ) ) : '';
+		check_admin_referer( 'aaseo_link_' . $id . '_' . $do );
+
+		$notice = '';
+		if ( 'approve' === $do ) {
+			$res    = AASEO_Links::approve( $id );
+			$notice = is_wp_error( $res ) ? $res->get_error_message() : 'link_applied';
+		} elseif ( 'reject' === $do ) {
+			$res    = AASEO_Links::reject( $id );
+			$notice = is_wp_error( $res ) ? $res->get_error_message() : 'link_rejected';
+		}
+		wp_safe_redirect( add_query_arg(
+			array( 'msg' => rawurlencode( $notice ) ),
+			admin_url( 'admin.php?page=' . self::SLUG . '-links' )
+		) );
+		exit;
+	}
+
+	/** 内链审核页:AI 把判断做完(锚文本/目标/相关性/理由/上下文),点头与否是人的事 */
+	public static function render_links_page() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'auto-ai-seo' ) );
+		}
+		// 状态提示参数,不改数据,无需 nonce
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$msg = isset( $_GET['msg'] ) ? rawurldecode( sanitize_text_field( wp_unslash( $_GET['msg'] ) ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		$counts  = AASEO_Links::counts();
+		$pending = AASEO_Links::pending( 100 );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Internal link suggestions', 'auto-ai-seo' ); ?></h1>
+			<?php if ( '' !== $msg ) : ?>
+				<div class="notice notice-info"><p><?php echo esc_html( self::notice_label( $msg ) ); ?></p></div>
+			<?php endif; ?>
+			<p class="description">
+				<?php esc_html_e( 'Nothing is ever applied automatically. Approving inserts the link at the first safe occurrence of the anchor; rejecting remembers the pair and never suggests it again.', 'auto-ai-seo' ); ?>
+				<?php
+				printf(
+					/* translators: 1: applied count, 2: rejected count */
+					esc_html__( 'So far: %1$s applied, %2$s rejected.', 'auto-ai-seo' ),
+					esc_html( number_format_i18n( isset( $counts['applied'] ) ? $counts['applied'] : 0 ) ),
+					esc_html( number_format_i18n( isset( $counts['rejected'] ) ? $counts['rejected'] : 0 ) )
+				);
+				?>
+			</p>
+			<?php if ( ! $pending ) : ?>
+				<p><?php esc_html_e( 'No suggestions waiting. Run the “Internal link suggestions” task to generate more.', 'auto-ai-seo' ); ?></p>
+			<?php else : ?>
+				<table class="wp-list-table widefat striped">
+					<thead><tr>
+						<th><?php esc_html_e( 'In post', 'auto-ai-seo' ); ?></th>
+						<th><?php esc_html_e( 'Anchor in context', 'auto-ai-seo' ); ?></th>
+						<th><?php esc_html_e( 'Links to', 'auto-ai-seo' ); ?></th>
+						<th><?php esc_html_e( 'Score', 'auto-ai-seo' ); ?></th>
+						<th><?php esc_html_e( 'Why', 'auto-ai-seo' ); ?></th>
+						<th><?php esc_html_e( 'Decision', 'auto-ai-seo' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $pending as $row ) : ?>
+						<tr>
+							<td><a href="<?php echo esc_url( get_permalink( (int) $row->source_id ) ); ?>" target="_blank" rel="noopener">
+								<?php echo esc_html( get_the_title( (int) $row->source_id ) ); ?></a></td>
+							<td><?php echo wp_kses( self::anchor_context( $row ), array( 'mark' => array() ) ); ?></td>
+							<td><a href="<?php echo esc_url( get_permalink( (int) $row->target_id ) ); ?>" target="_blank" rel="noopener">
+								<?php echo esc_html( get_the_title( (int) $row->target_id ) ); ?></a></td>
+							<td><?php echo esc_html( $row->relevance . '/5' ); ?></td>
+							<td><span class="description"><?php echo esc_html( $row->reason ); ?></span></td>
+							<td>
+								<?php
+								foreach ( array( 'approve' => __( 'Approve', 'auto-ai-seo' ), 'reject' => __( 'Reject', 'auto-ai-seo' ) ) as $do => $label ) {
+									$url = wp_nonce_url(
+										admin_url( 'admin-post.php?action=aaseo_link&id=' . (int) $row->id . '&do=' . $do ),
+										'aaseo_link_' . (int) $row->id . '_' . $do
+									);
+									printf( '<a class="button button-small" href="%s">%s</a> ', esc_url( $url ), esc_html( $label ) );
+								}
+								?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/** 锚文本连同前后文一起给人看 —— 判断"这句话该不该是链接"离不开上下文 */
+	private static function anchor_context( $row ) {
+		$post = get_post( (int) $row->source_id );
+		if ( ! $post ) {
+			return esc_html( $row->anchor );
+		}
+		$text = wp_strip_all_tags( strip_shortcodes( (string) $post->post_content ), true );
+		$text = trim( (string) preg_replace( '/\s+/u', ' ', $text ) );
+		$pos  = function_exists( 'mb_strpos' ) ? mb_strpos( $text, (string) $row->anchor ) : strpos( $text, (string) $row->anchor );
+		if ( false === $pos ) {
+			return '<mark>' . esc_html( $row->anchor ) . '</mark>';
+		}
+		$before = mb_substr( $text, max( 0, $pos - 40 ), min( 40, $pos ) );
+		$after  = mb_substr( $text, $pos + mb_strlen( (string) $row->anchor ), 40 );
+		return '…' . esc_html( $before ) . '<mark>' . esc_html( $row->anchor ) . '</mark>' . esc_html( $after ) . '…';
+	}
+
 	/** 操作回执 slug → 人话。URL 里传 slug 是刻意的:链接与语言无关,翻译发生在渲染时。 */
 	private static function notice_label( $msg ) {
 		$map = array(
@@ -398,6 +523,8 @@ class AASEO_Admin {
 			'paused'    => __( 'Task paused.', 'auto-ai-seo' ),
 			'resumed'   => __( 'Task resumed.', 'auto-ai-seo' ),
 			'cancelled' => __( 'Queued actions cancelled.', 'auto-ai-seo' ),
+			'link_applied'  => __( 'Link inserted into the post.', 'auto-ai-seo' ),
+			'link_rejected' => __( 'Suggestion rejected — this pair will never be suggested again.', 'auto-ai-seo' ),
 		);
 		return isset( $map[ $msg ] ) ? $map[ $msg ] : $msg;
 	}

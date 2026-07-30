@@ -407,6 +407,8 @@ class AASEO_Jobs {
 			'no_content'   => __( 'post has no content to describe', 'auto-ai-seo' ),
 			'gone'         => __( 'post no longer exists or is not published', 'auto-ai-seo' ),
 			'thin'         => __( 'too few posts to be worth describing (threshold configurable)', 'auto-ai-seo' ),
+			'no_targets'   => __( 'no related posts share a category or tag — nothing worth linking to', 'auto-ai-seo' ),
+			'no_links'     => __( 'reviewed — no link scored high enough to suggest (that is a pass, not a failure)', 'auto-ai-seo' ),
 		);
 	}
 

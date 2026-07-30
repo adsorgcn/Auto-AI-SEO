@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class AASEO_Install {
 
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 	const DB_OPTION  = 'aaseo_db_version';
 
 	public static function activate() {
@@ -65,6 +65,23 @@ class AASEO_Install {
 			PRIMARY KEY  (id),
 			KEY created (created_at),
 			KEY job_model (job,model)
+		) $charset;" );
+
+		// 内链建议审核队列。pair 唯一(含已拒绝) —— 拒过的永不再提
+		$links = AASEO_Links::table();
+		dbDelta( "CREATE TABLE $links (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			source_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			target_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			anchor text NOT NULL,
+			relevance tinyint(3) unsigned NOT NULL DEFAULT 0,
+			reason text NOT NULL,
+			status varchar(12) NOT NULL DEFAULT 'pending',
+			created_at datetime NOT NULL,
+			decided_at datetime DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY status (status),
+			KEY pair (source_id,target_id)
 		) $charset;" );
 	}
 }
