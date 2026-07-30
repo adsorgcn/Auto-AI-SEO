@@ -12,8 +12,7 @@ defined( 'ABSPATH' ) || exit;
 class AASEO_Jobs {
 
 	const STATE_OPTION = 'aaseo_job_state';
-	const ENQUEUE_CHUNK = 200;   // 每次入队 200 条,分多轮 —— 避免一次性取上万 ID
-	const MAX_ENQUEUE_ROUNDS = 5; // 补扫轮数上限,防止处理速度跟不上时无限循环
+	const ENQUEUE_CHUNK = 200;   // 每次入队 200 条,分多批 —— 避免一次性取上万 ID
 
 	/** @var AASEO_Jobs */
 	private static $instance;
@@ -94,28 +93,28 @@ class AASEO_Jobs {
 
 		as_enqueue_async_action(
 			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-			array( 'slug' => $slug, 'offset' => 0, 'round' => 0 ),
+			array( 'slug' => $slug, 'cursor' => 0 ),
 			$job->group()
 		);
 		return true;
 	}
 
 	/**
-	 * 分批入队。
+	 * 分批入队(游标分页)。
 	 *
-	 * 这里有个不显眼但会漏活的陷阱:候选集是"还没处理的对象",**处理完就从集合里消失**,
-	 * 于是 offset 会跳过后面等量的条目。所以:
-	 *   · 逐条用 as_has_scheduled_action() 去重,不怕重复扫到同一条;
-	 *   · 一轮扫完(取不满一批)后,若仍有候选,从 offset 0 再扫一轮补漏;
-	 *   · 轮数设上限,避免"处理速度跟不上入队速度"时无限循环。
+	 * 每次只取"键 < 游标"的下一批,把本批最小键作为下一批的游标。
+	 * 游标严格递减,所以:每条恰好访问一次、不会漏、不会重、必然终止 ——
+	 * 不需要补扫轮次,也不需要轮数上限。
+	 *
+	 * 仍然保留 as_has_scheduled_action() 去重:同一模块被连点两次"开始"时,
+	 * 两条入队链会各自扫一遍,去重能挡住重复排队。
 	 */
-	public function enqueue_chunk( $slug, $offset = 0, $round = 0 ) {
+	public function enqueue_chunk( $slug, $cursor = 0 ) {
 		// AS 会把关联数组展开成位置参数,兼容两种形态
 		if ( is_array( $slug ) ) {
 			$args   = $slug;
 			$slug   = isset( $args['slug'] ) ? $args['slug'] : '';
-			$offset = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
-			$round  = isset( $args['round'] ) ? (int) $args['round'] : 0;
+			$cursor = isset( $args['cursor'] ) ? (int) $args['cursor'] : 0;
 		}
 		$job = $this->get( $slug );
 		if ( ! $job ) {
@@ -129,11 +128,15 @@ class AASEO_Jobs {
 			return; // --limit 已排满
 		}
 
-		$want  = $limit > 0 ? min( self::ENQUEUE_CHUNK, $limit - $done ) : self::ENQUEUE_CHUNK;
-		$ids   = $job->find_candidates( $want, (int) $offset );
+		$want = $limit > 0 ? min( self::ENQUEUE_CHUNK, $limit - $done ) : self::ENQUEUE_CHUNK;
+		$ids  = array_map( 'intval', (array) $job->find_candidates( $want, (int) $cursor ) );
+		if ( ! $ids ) {
+			return; // 扫完了
+		}
+
 		$fresh = 0;
 		foreach ( $ids as $id ) {
-			$payload = array( 'slug' => $slug, 'object_id' => (int) $id );
+			$payload = array( 'slug' => $slug, 'object_id' => $id );
 			if ( function_exists( 'as_has_scheduled_action' )
 				&& as_has_scheduled_action( $job->hook(), $payload, $job->group() ) ) {
 				continue; // 已在队列里,不重复排
@@ -145,24 +148,18 @@ class AASEO_Jobs {
 			$this->bump( $slug, 'queued', $fresh );
 		}
 
-		$next_offset = (int) $offset + count( $ids );
-		$next_round  = (int) $round;
-
-		if ( count( $ids ) < $want ) {
-			// 这一轮扫到底了 —— 若还有候选(说明被 offset 跳过),从头补扫
-			$next_offset = 0;
-			++$next_round;
-			if ( $next_round > self::MAX_ENQUEUE_ROUNDS || ! $job->count_candidates() ) {
-				return;
-			}
-			if ( ! $fresh ) {
-				return; // 整轮没排进任何新条目,说明剩下的都在队列里了
-			}
+		/*
+		 * 防守子类不守约定:游标必须严格变小,否则就是死循环。
+		 * 这里宁可少排一批也不肯冒无限入队的风险 —— 那会把 AS 表撑爆。
+		 */
+		$next = min( $ids );
+		if ( $next <= 0 || ( (int) $cursor > 0 && $next >= (int) $cursor ) ) {
+			return;
 		}
 
 		as_enqueue_async_action(
 			'aaseo_enqueue_' . str_replace( '-', '_', $slug ),
-			array( 'slug' => $slug, 'offset' => $next_offset, 'round' => $next_round ),
+			array( 'slug' => $slug, 'cursor' => $next ),
 			$job->group()
 		);
 	}

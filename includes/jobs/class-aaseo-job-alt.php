@@ -38,15 +38,22 @@ class AASEO_Job_Alt extends AASEO_Job {
 	// ---------------------------------------------------------------- 候选
 
 	/**
-	 * 没有 alt 的图片附件。分页取,绝不一次性取全量 —— 大媒体库会撞查询长度上限。
+	 * 没有 alt 的图片附件,按 ID 降序取 ID < $cursor 的下一批($cursor 为 0 表示从头)。
+	 * 游标分页而非 offset —— 理由见 AASEO_Job::find_candidates() 的注释。
 	 */
-	public function find_candidates( $limit, $offset ) {
+	public function find_candidates( $limit, $cursor ) {
+		$cursor = (int) $cursor;
+		// WP_Query 没有"ID 小于 N"的原生参数。挂一次性 filter,查完立刻摘掉,不影响其它查询。
+		$clause = function ( $where ) use ( $cursor ) {
+			global $wpdb;
+			return $cursor > 0 ? $where . $wpdb->prepare( " AND {$wpdb->posts}.ID < %d", $cursor ) : $where;
+		};
+		add_filter( 'posts_where', $clause );
 		$q = new WP_Query( array(
 			'post_type'              => 'attachment',
 			'post_status'            => 'inherit',
 			'post_mime_type'         => array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' ),
 			'posts_per_page'         => (int) $limit,
-			'offset'                 => (int) $offset,
 			'fields'                 => 'ids',
 			'orderby'                => 'ID',
 			'order'                  => 'DESC',
@@ -59,6 +66,7 @@ class AASEO_Job_Alt extends AASEO_Job {
 				array( 'key' => '_wp_attachment_image_alt', 'value' => '', 'compare' => '=' ),
 			),
 		) );
+		remove_filter( 'posts_where', $clause );
 		return array_map( 'intval', $q->posts );
 	}
 

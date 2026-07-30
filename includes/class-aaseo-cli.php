@@ -156,10 +156,10 @@ class AASEO_CLI {
 
 		$progress = WP_CLI\Utils\make_progress_bar( $job->label(), $total );
 		$done     = $failed = $skipped = $n = 0;
-		$offset   = 0;
+		$cursor   = 0; // 0 = 从头;之后每批取"键 < 上批最小键",与后台队列同一套游标语义
 
 		while ( $n < $total ) {
-			$ids = $job->find_candidates( min( 200, $total - $n ), $offset );
+			$ids = $job->find_candidates( min( 200, $total - $n ), $cursor );
 			if ( ! $ids ) {
 				break;
 			}
@@ -192,8 +192,12 @@ class AASEO_CLI {
 					WP_CLI\Utils\wp_clear_object_cache();
 				}
 			}
-			// find_candidates 通常只返回"还没处理的",处理完自然前移;若模块是静态列表则需推进 offset
-			$offset += count( $ids );
+			// 游标严格递减 → 每条恰好访问一次,不会因候选集缩水而漏
+			$next = min( array_map( 'intval', $ids ) );
+			if ( $next <= 0 || ( $cursor > 0 && $next >= $cursor ) ) {
+				break; // 子类没守游标约定,停下来而不是死循环
+			}
+			$cursor = $next;
 		}
 		$progress->finish();
 

@@ -26,17 +26,32 @@ abstract class AASEO_Job {
 	}
 
 	/**
-	 * 找出待处理对象的 ID 列表。
+	 * 找出待处理对象的 ID 列表。**游标分页,不是 offset 分页。**
 	 *
-	 * 重要:必须支持分页(limit/offset),**不要一次返回上万个 ID** ——
-	 * 大站点上一次性取全量 ID 会撞上 MySQL 查询长度上限,也吃内存
-	 * (这是图片优化类插件公认的规模坑)。骨架会分页反复调用它来入队。
+	 * 必须分页取,不要一次返回上万个 ID —— 大站点上会撞 MySQL 查询长度上限也吃内存。
+	 *
+	 * 为什么是游标而不是 offset:候选集的定义是"还没处理的对象",**处理完就从集合里消失**。
+	 * 用 offset 翻页时集合在脚下缩水,offset=200 指向的已经不是原来第 200 条,
+	 * 于是每翻一页就漏掉一批;翻到越界还会返回空数组,让入队链误判为"扫完了"而提前收工。
+	 * 这是实测踩过的坑:2183 张图只跑了 1200 张。
+	 *
+	 * 游标分页(keyset pagination)没有这个问题:只要"取排序键小于游标的下一批",
+	 * 集合怎么缩水都不影响,每条恰好被访问一次,且游标严格递减 → 必然终止。
+	 *
+	 * 实现约定:
+	 *   · $cursor 为 **0 表示从头开始**(不设上界);
+	 *   · 否则只返回排序键 **严格小于** $cursor 的对象;
+	 *   · 一律按排序键**降序**返回;
+	 *   · 骨架取你返回的最小键作为下一批的游标。
+	 *
+	 * (哨兵用 0 而不是 PHP_INT_MAX:游标要经 JSON 存进 Action Scheduler 的参数表,
+	 *  超大整数在某些平台上往返会变成浮点丢精度。)
 	 *
 	 * @param int $limit
-	 * @param int $offset
-	 * @return int[]
+	 * @param int $cursor 0 = 从头;否则只要键 < 此值的对象
+	 * @return int[] 降序
 	 */
-	abstract public function find_candidates( $limit, $offset );
+	abstract public function find_candidates( $limit, $cursor );
 
 	/** 待处理总数(用于进度与跑前预估) */
 	abstract public function count_candidates();
