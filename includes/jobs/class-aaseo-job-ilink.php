@@ -121,7 +121,13 @@ class AASEO_Job_Ilink extends AASEO_Job {
 			return $res;
 		}
 
-		$added = $this->store_suggestions( $post, $res['text'], $targets );
+		$parsed = $this->parse_suggestions( $res['text'] );
+		if ( null === $parsed ) {
+			// 解析不了 —— 不打标记(留在候选集,下次采样可能就正常),并进失败统计:
+			// 静默记成 done:0 会把解析故障伪装成"没有建议"
+			return new WP_Error( 'parse', __( 'Model returned unparseable output; post left for the next run.', 'auto-ai-seo' ) );
+		}
+		$added = $this->store_suggestions( $post, $parsed, $targets );
 		update_post_meta( $post->ID, self::DONE_KEY, 'done:' . time() . ':' . $added );
 		if ( 0 === $added ) {
 			AASEO_Jobs::note_skip( $this->slug(), 'no_links' );
@@ -213,13 +219,24 @@ class AASEO_Job_Ilink extends AASEO_Job {
 	 * 目标必须在预筛清单里(防幻觉 id)、相关性 ≥4、锚文本长度 8-60、
 	 * 锚文本必须能在正文里原样找到安全落点(用与 approve 相同的算法预演一次)。
 	 */
-	private function store_suggestions( $post, $raw, array $targets ) {
+	/**
+	 * 解析模型输出。容错:代码栅栏、JSON 前后的闲话(取首个 '[' 到末个 ']')。
+	 *
+	 * @return array|null null = 解析不了(与"空数组"严格区分:[] 是合法答案)
+	 */
+	private function parse_suggestions( $raw ) {
 		$raw = trim( (string) $raw );
-		$raw = (string) preg_replace( '/^```(?:json)?\s*|\s*```$/', '', $raw ); // 摘掉可能的代码栅栏
-		$arr = json_decode( $raw, true );
-		if ( ! is_array( $arr ) ) {
-			return 0;
+		$raw = (string) preg_replace( '/^```(?:json)?\s*|\s*```$/', '', $raw );
+		$a   = strpos( $raw, '[' );
+		$b   = strrpos( $raw, ']' );
+		if ( false !== $a && false !== $b && $b >= $a ) {
+			$raw = substr( $raw, $a, $b - $a + 1 );
 		}
+		$arr = json_decode( $raw, true );
+		return is_array( $arr ) ? $arr : null;
+	}
+
+	private function store_suggestions( $post, array $arr, array $targets ) {
 		$added = 0;
 		foreach ( array_slice( $arr, 0, 3 ) as $s ) {
 			if ( ! is_array( $s ) ) {

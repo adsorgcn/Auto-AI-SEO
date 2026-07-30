@@ -113,15 +113,25 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 		}
 
 		$urls = $this->external_urls( $post->post_content );
-		update_post_meta( $post->ID, self::CHECKED_KEY, time() );
 		if ( ! $urls ) {
+			update_post_meta( $post->ID, self::CHECKED_KEY, time() );
 			delete_post_meta( $post->ID, self::BROKEN_KEY );
 			AASEO_Jobs::note_skip( $this->slug(), 'no_links_out' );
 			return 'skipped';
 		}
 
+		/*
+		 * 超过单次上限的链接**轮换**着查,不是永远只查前 15 条:
+		 * 片游标存 postmeta;没查完整轮就不盖"已检查"戳 —— 文章留在候选集,
+		 * 下一个队列动作接着查下一片。中途挂掉也不会把文章伪装成"已查 30 天"。
+		 */
+		$offset = (int) get_post_meta( $post->ID, '_aaseo_links_offset', true );
+		if ( $offset >= count( $urls ) ) {
+			$offset = 0;
+		}
+		$slice  = array_slice( $urls, $offset, self::MAX_LINKS );
 		$broken = array();
-		foreach ( array_slice( $urls, 0, self::MAX_LINKS ) as $url ) {
+		foreach ( $slice as $url ) {
 			$verdict = $this->check_url( $url );
 			if ( 'dead' === $verdict['state'] ) {
 				$broken[] = array(
@@ -132,8 +142,26 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 			}
 		}
 
-		if ( $broken ) {
-			update_post_meta( $post->ID, self::BROKEN_KEY, $broken );
+		// 与既有报告按 url 合并:本片复查过且健在的清除,其它片的报告保留
+		$prev = (array) get_post_meta( $post->ID, self::BROKEN_KEY, true );
+		$keep = array();
+		$now  = wp_list_pluck( $broken, 'url' );
+		foreach ( $prev as $b ) {
+			if ( isset( $b['url'] ) && ! in_array( $b['url'], $now, true ) && ! in_array( $b['url'], $slice, true ) ) {
+				$keep[] = $b;
+			}
+		}
+		$all = array_merge( $keep, $broken );
+
+		if ( ( $offset + count( $slice ) ) >= count( $urls ) ) {
+			update_post_meta( $post->ID, self::CHECKED_KEY, time() );
+			delete_post_meta( $post->ID, '_aaseo_links_offset' );
+		} else {
+			update_post_meta( $post->ID, '_aaseo_links_offset', $offset + count( $slice ) );
+		}
+
+		if ( $all ) {
+			update_post_meta( $post->ID, self::BROKEN_KEY, $all );
 			return true; // "done" = 发现并报告了死链
 		}
 		delete_post_meta( $post->ID, self::BROKEN_KEY ); // 全部健在 → 清掉旧报告
@@ -143,12 +171,15 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 
 	/** 正文里的外部链接(去重;站内与短链不查 —— 那是站自己的事) */
 	private function external_urls( $content ) {
-		if ( ! preg_match_all( '/href=["\'](https?:\/\/[^"\']+)["\']/i', (string) $content, $m ) ) {
+		if ( ! preg_match_all( '/href=["\']((?:https?:)?\/\/[^"\']+)["\']/i', (string) $content, $m ) ) {
 			return array();
 		}
 		$home = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
 		$out  = array();
 		foreach ( array_unique( $m[1] ) as $url ) {
+			if ( 0 === strpos( $url, '//' ) ) {
+				$url = 'https:' . $url; // 协议相对的外链补上 https: 再验
+			}
 			$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
 			if ( '' !== $host && $host !== $home ) {
 				$out[] = html_entity_decode( $url, ENT_QUOTES );
@@ -207,7 +238,23 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 			return array( 'state' => 'alive', 'why' => 'HTTP ' . $code );
 		}
 
-		// 模糊地带 —— AI 只判断这一小撮
+		/*
+		 * 模糊地带 —— AI 只判断这一小撮。
+		 * 若响应来自 HEAD(无 body),先对最终地址补一次受限 GET:
+		 * 判定要看落地页标题,拿着空标题判定等于蒙。
+		 */
+		$body = (string) wp_remote_retrieve_body( $res );
+		if ( '' === $body ) {
+			$get = wp_remote_get( $final ? $final : $url, array(
+				'timeout'             => 6,
+				'redirection'         => 2,
+				'limit_response_size' => 65536,
+				'user-agent'          => 'Mozilla/5.0 (compatible; AutoAISEO-LinkCheck/' . AASEO_VERSION . '; +' . home_url( '/' ) . ')',
+			) );
+			if ( ! is_wp_error( $get ) ) {
+				$res = $get;
+			}
+		}
 		return $this->judge( $url, $final, $res );
 	}
 
@@ -261,8 +308,22 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 		$tail = function ( $h ) {
 			$parts = explode( '.', $h );
 			$n     = count( $parts );
-			return $n >= 2 ? $parts[ $n - 2 ] . '.' . $parts[ $n - 1 ] : $h;
+			if ( $n < 2 ) {
+				return $h; // IP 直连等:只有完全相等才算同域
+			}
+			/*
+			 * ccSLD 启发式:example.co.uk 的注册域是三段,不是 co.uk ——
+			 * 否则英国的任意两个网站都会被判成"同一家"。不引入完整 PSL 清单,
+			 * 只覆盖常见注册后缀;误差方向是"偶尔把同域判成跨域 → 多问一次 AI",
+			 * 永远不会把跨域判成同域而漏检。
+			 */
+			$cc_sld = array( 'co', 'com', 'net', 'org', 'gov', 'edu', 'ac', 'or', 'ne' );
+			$tld    = $parts[ $n - 1 ];
+			if ( $n >= 3 && 2 === strlen( $tld ) && in_array( $parts[ $n - 2 ], $cc_sld, true ) ) {
+				return $parts[ $n - 3 ] . '.' . $parts[ $n - 2 ] . '.' . $tld;
+			}
+			return $parts[ $n - 2 ] . '.' . $tld;
 		};
-		return $tail( $a ) === $tail( $b );
+		return $tail( strtolower( $a ) ) === $tail( strtolower( $b ) );
 	}
 }

@@ -86,16 +86,17 @@ class AASEO_Job_Term extends AASEO_Job {
 			return $clauses;
 		};
 		add_filter( 'terms_clauses', $clause );
-		$ids = get_terms( array(
+		// fields=count 让数据库做 COUNT(*) —— 后台任务表每次渲染都会调这个方法
+		$n = get_terms( array(
 			'taxonomy'   => $this->taxonomies(),
-			'fields'     => 'ids',
+			'fields'     => 'count',
 			'hide_empty' => true,
 			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				array( 'key' => AASEO_Meta::JUDGED_KEY, 'compare' => 'NOT EXISTS' ),
 			),
 		) );
 		remove_filter( 'terms_clauses', $clause );
-		return is_array( $ids ) ? count( $ids ) : 0;
+		return is_wp_error( $n ) ? 0 : (int) $n;
 	}
 
 	// ---------------------------------------------------------------- 处理

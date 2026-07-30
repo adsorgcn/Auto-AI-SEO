@@ -96,15 +96,32 @@ class AASEO_Links {
 	 * @return true|WP_Error
 	 */
 	public static function approve( $id ) {
-		$row = self::get( $id );
-		if ( ! $row || 'pending' !== $row->status ) {
+		global $wpdb;
+		/*
+		 * 原子认领:两个管理员同时点批准,只有一个 UPDATE 能命中 pending ——
+		 * 输的一方得到"已不在待审",而不是同一条链接被塞进正文两次。
+		 */
+		$claimed = $wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			"UPDATE {$wpdb->prefix}aaseo_links SET status = 'applying' WHERE id = %d AND status = 'pending'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$id
+		) );
+		if ( 1 !== (int) $claimed ) {
 			return new WP_Error( 'gone', __( 'Suggestion no longer pending.', 'auto-ai-seo' ) );
 		}
-		$post = get_post( (int) $row->source_id );
-		$url  = get_permalink( (int) $row->target_id );
-		if ( ! $post || 'publish' !== $post->post_status || ! $url ) {
+		$row  = self::get( $id );
+		$post = $row ? get_post( (int) $row->source_id ) : null;
+		$url  = $row ? get_permalink( (int) $row->target_id ) : '';
+
+		// 目标必须还发布着 —— 给读者一个 404 链接比不加链接糟糕得多
+		if ( ! $post || 'publish' !== $post->post_status || ! $url
+			|| 'publish' !== get_post_status( (int) $row->target_id ) ) {
 			self::set_status( $id, 'stale' );
 			return new WP_Error( 'stale', __( 'Source or target post is gone; suggestion marked stale.', 'auto-ai-seo' ) );
+		}
+		// 建议入队后正文可能被人手动加过同目标的链接 —— 同一目标一篇只链一次
+		if ( self::already_links( $post->post_content, (int) $row->target_id ) ) {
+			self::set_status( $id, 'stale' );
+			return new WP_Error( 'dupe', __( 'Post already links to this target; suggestion marked stale.', 'auto-ai-seo' ) );
 		}
 
 		$new = self::apply_to_content( $post->post_content, (string) $row->anchor, $url );
@@ -114,9 +131,25 @@ class AASEO_Links {
 			return new WP_Error( 'no_anchor', __( 'Anchor text no longer found in the post (content changed?); suggestion marked stale.', 'auto-ai-seo' ) );
 		}
 
+		/*
+		 * kses 连坐守卫:wp_update_post 会让**整篇**正文重新过一遍 kses ——
+		 * 批准者没有 unfiltered_html(DISALLOW_UNFILTERED_HTML 加固、多站点的普通管理员)时,
+		 * 正文里原有的 iframe/script(别人当年合法存进去的)会被静默剥掉。
+		 * "只改一个链接"的承诺不能靠运气:kses 会动到链接以外的任何东西就中止。
+		 */
+		if ( ! current_user_can( 'unfiltered_html' ) ) {
+			$would_be = wp_kses_post( $new );
+			$expected = self::apply_to_content( wp_kses_post( $post->post_content ), (string) $row->anchor, $url );
+			if ( '' === $expected || $would_be !== $expected ) {
+				self::set_status( $id, 'pending' ); // 退回待审,让有权限的人来批
+				return new WP_Error( 'kses', __( 'This post contains markup (e.g. iframes) that your account cannot re-save; approving would strip it. Ask an administrator with unfiltered_html to approve this one.', 'auto-ai-seo' ) );
+			}
+		}
+
 		// wp_update_post 期望"已加斜杠"的数据($_POST 形态),不包 wp_slash 会吃掉反斜杠
 		$res = wp_update_post( wp_slash( array( 'ID' => $post->ID, 'post_content' => $new ) ), true );
 		if ( is_wp_error( $res ) ) {
+			self::set_status( $id, 'pending' ); // 写库失败退回待审,不吞建议
 			return $res;
 		}
 		self::set_status( $id, 'applied' );
@@ -141,16 +174,42 @@ class AASEO_Links {
 	 * @return string 替换后的完整正文;找不到安全落点返回 ''
 	 */
 	public static function apply_to_content( $content, $anchor, $url ) {
-		if ( '' === trim( $anchor ) ) {
+		$anchor = trim( (string) $anchor );
+		if ( '' === $anchor ) {
 			return '';
 		}
-		$parts   = preg_split( '/(<[^>]*>)/u', (string) $content, -1, PREG_SPLIT_DELIM_CAPTURE );
-		$depth_a = 0;
+		/*
+		 * 匹配模式:空白一律容错为 \s+、& 容错为 &amp; —— 锚文本摘自"渲染后的可读文本",
+		 * 原文里可能是换行或实体。除这两类外逐字精确,绝不模糊。
+		 */
+		$tokens  = preg_split( '/\s+/u', $anchor );
+		$pattern = implode( '\s+', array_map( 'preg_quote', $tokens ) );
+		$pattern = str_replace( '&', '(?:&|&amp;)', $pattern );
+		$pattern = '/' . str_replace( '/', '\/', $pattern ) . '/u';
+
+		/*
+		 * 全程字节寻址(strpos/strlen/substr):UTF-8 的精确子串拼接按字节做是安全的,
+		 * 而 mb_* 与字节函数混用在无 mbstring 的主机上会字符/字节错位,直接改坏正文
+		 * (WP 只填补 mb_substr/mb_strlen,不填补 mb_strpos —— 混用必错位)。
+		 */
+		$parts    = preg_split( '/(<[^>]*>)/u', (string) $content, -1, PREG_SPLIT_DELIM_CAPTURE );
+		$depth_a  = 0;
+		$in_dead  = ''; // 当前所在的不可落链元素(script/style/textarea/noscript)
 		foreach ( (array) $parts as $i => $part ) {
 			if ( '' === $part ) {
 				continue;
 			}
 			if ( '<' === $part[0] ) {
+				if ( '' !== $in_dead ) {
+					if ( preg_match( '/^<\/' . $in_dead . '\s*>/i', $part ) ) {
+						$in_dead = '';
+					}
+					continue;
+				}
+				if ( preg_match( '/^<(script|style|textarea|noscript)\b/i', $part, $dm ) ) {
+					$in_dead = strtolower( $dm[1] );
+					continue;
+				}
 				if ( preg_match( '/^<a[\s>]/i', $part ) ) {
 					++$depth_a;
 				} elseif ( preg_match( '/^<\/a\s*>/i', $part ) ) {
@@ -158,17 +217,23 @@ class AASEO_Links {
 				}
 				continue;
 			}
-			if ( $depth_a > 0 ) {
-				continue; // 已在链接里的文字不动 —— 嵌套 <a> 是非法 HTML
-			}
-			$pos = function_exists( 'mb_strpos' ) ? mb_strpos( $part, $anchor ) : strpos( $part, $anchor );
-			if ( false === $pos ) {
+			/*
+			 * script/style/textarea 的**内容**在这个切分下也是"文本段",但它们不是给读者看的
+			 * 文字 —— JSON-LD 里恰好复述了正文句子时,链接绝不能插进 JSON 里。
+			 * 审核界面给人看的上下文来自 wp_strip_all_tags(它会连 script 体一起剥掉),
+			 * 落地位置必须与人审的位置一致,否则人工审核就被架空了。
+			 */
+			if ( $depth_a > 0 || '' !== $in_dead ) {
 				continue;
 			}
-			$len         = function_exists( 'mb_strlen' ) ? mb_strlen( $anchor ) : strlen( $anchor );
-			$parts[ $i ] = mb_substr( $part, 0, $pos )
-				. '<a href="' . esc_url( $url ) . '">' . $anchor . '</a>'
-				. mb_substr( $part, $pos + $len );
+			if ( ! preg_match( $pattern, $part, $hm, PREG_OFFSET_CAPTURE ) ) {
+				continue;
+			}
+			$pos          = (int) $hm[0][1]; // 字节偏移(PREG_OFFSET_CAPTURE 一律按字节)
+			$hit          = $hm[0][0];       // 命中的原文形态(保留原有换行/实体)
+			$parts[ $i ]  = substr( $part, 0, $pos )
+				. '<a href="' . esc_url( $url ) . '">' . $hit . '</a>'
+				. substr( $part, $pos + strlen( $hit ) );
 			return implode( '', $parts );
 		}
 		return '';

@@ -510,12 +510,19 @@ class AASEO_Admin {
 		}
 		$text = wp_strip_all_tags( strip_shortcodes( (string) $post->post_content ), true );
 		$text = trim( (string) preg_replace( '/\s+/u', ' ', $text ) );
-		$pos  = function_exists( 'mb_strpos' ) ? mb_strpos( $text, (string) $row->anchor ) : strpos( $text, (string) $row->anchor );
+		// 全程字节寻址:strpos 的字节偏移混进 mb_substr 的字符偏移,在无 mbstring 主机上会错位
+		$pos = strpos( $text, (string) $row->anchor );
 		if ( false === $pos ) {
 			return '<mark>' . esc_html( $row->anchor ) . '</mark>';
 		}
-		$before = mb_substr( $text, max( 0, $pos - 40 ), min( 40, $pos ) );
-		$after  = mb_substr( $text, $pos + mb_strlen( (string) $row->anchor ), 40 );
+		$start  = max( 0, $pos - 120 );
+		$before = substr( $text, $start, $pos - $start );
+		$after  = substr( $text, $pos + strlen( (string) $row->anchor ), 120 );
+		// 字节掐头去尾可能切在多字节序列中间:剥掉残缺字节再收窄到 ~40 字
+		$before = (string) preg_replace( '/^[\x80-\xBF]+/', '', $before );
+		$after  = (string) preg_replace( '/[\xC0-\xFF][\x80-\xBF]*$/', '', $after );
+		$before = function_exists( 'mb_substr' ) ? mb_substr( $before, max( 0, mb_strlen( $before ) - 40 ) ) : $before;
+		$after  = function_exists( 'mb_substr' ) ? mb_substr( $after, 0, 40 ) : $after;
 		return '…' . esc_html( $before ) . '<mark>' . esc_html( $row->anchor ) . '</mark>' . esc_html( $after ) . '…';
 	}
 

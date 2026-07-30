@@ -47,7 +47,11 @@ class AASEO_Schema {
 			return; // 单篇交给主题/核心;搜索与 404 不该有 canonical
 		}
 		$url = '';
-		if ( is_front_page() || is_home() ) {
+		if ( is_home() && ! is_front_page() ) {
+			// "文章页"(page_for_posts):它的规范地址是那张页面自己,不是首页
+			$blog = (int) get_option( 'page_for_posts' );
+			$url  = $blog ? (string) get_permalink( $blog ) : home_url( '/' );
+		} elseif ( is_front_page() ) {
 			$url = home_url( '/' );
 		} elseif ( is_category() || is_tag() || is_tax() ) {
 			$term = get_queried_object();
@@ -61,7 +65,13 @@ class AASEO_Schema {
 		}
 		$paged = max( 1, (int) get_query_var( 'paged' ) );
 		if ( $paged > 1 ) {
-			$url = trailingslashit( $url ) . 'page/' . $paged . '/';
+			global $wp_rewrite;
+			// 跟着站点的固定链接形态走:硬编码 /page/N/ 在朴素固定链接下是坏 URL
+			if ( $wp_rewrite instanceof WP_Rewrite && $wp_rewrite->using_permalinks() ) {
+				$url = trailingslashit( $url ) . $wp_rewrite->pagination_base . '/' . $paged . '/';
+			} else {
+				$url = add_query_arg( 'paged', $paged, $url );
+			}
 		}
 		echo '<link rel="canonical" href="' . esc_url( $url ) . '">' . "\n";
 	}
@@ -95,25 +105,21 @@ class AASEO_Schema {
 		$graphs = apply_filters( 'aaseo_jsonld_graphs', $graphs );
 		foreach ( $graphs as $g ) {
 			echo '<script type="application/ld+json">'
-				. wp_json_encode( $g, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
+				. wp_json_encode( $g, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG )
 				. '</script>' . "\n";
 		}
 	}
 
+	/**
+	 * 不带 SearchAction:站内链接搜索框富结果 2024-11 已停止展示 ——
+	 * 按本模块"只输出现行文档仍在用的类型"的自家规矩删掉(评审揪出的自相矛盾)。
+	 */
 	private static function website() {
 		return array(
-			'@context'        => 'https://schema.org',
-			'@type'           => 'WebSite',
-			'name'            => wp_strip_all_tags( get_bloginfo( 'name' ) ),
-			'url'             => home_url( '/' ),
-			'potentialAction' => array(
-				'@type'       => 'SearchAction',
-				'target'      => array(
-					'@type'       => 'EntryPoint',
-					'urlTemplate' => home_url( '/?s={search_term_string}' ),
-				),
-				'query-input' => 'required name=search_term_string',
-			),
+			'@context' => 'https://schema.org',
+			'@type'    => 'WebSite',
+			'name'     => wp_strip_all_tags( get_bloginfo( 'name' ) ),
+			'url'      => home_url( '/' ),
 		);
 	}
 
