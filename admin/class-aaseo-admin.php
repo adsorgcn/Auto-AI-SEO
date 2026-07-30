@@ -209,6 +209,9 @@ class AASEO_Admin {
 			<h2><?php esc_html_e( 'Robots & indexing', 'auto-ai-seo' ); ?></h2>
 			<?php self::render_robots(); ?>
 
+			<h2><?php esc_html_e( 'Broken links', 'auto-ai-seo' ); ?></h2>
+			<?php self::render_deadlinks(); ?>
+
 			<h2><?php esc_html_e( 'Settings', 'auto-ai-seo' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( 'aaseo_save' ); ?>
@@ -514,6 +517,32 @@ class AASEO_Admin {
 		$before = mb_substr( $text, max( 0, $pos - 40 ), min( 40, $pos ) );
 		$after  = mb_substr( $text, $pos + mb_strlen( (string) $row->anchor ), 40 );
 		return '…' . esc_html( $before ) . '<mark>' . esc_html( $row->anchor ) . '</mark>' . esc_html( $after ) . '…';
+	}
+
+	/** 死链报告:只列有把握死透的(403 之类的反爬拒绝永远不进这张表) */
+	private static function render_deadlinks() {
+		global $wpdb;
+		// 私有 meta 的聚合报表,无高层 API;后台页低频访问,不缓存
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_aaseo_deadlinks' ORDER BY post_id DESC LIMIT 100"
+		);
+		if ( ! $rows ) {
+			echo '<p class="description">' . esc_html__( 'No confirmed broken links. Run the “Broken link check” task to scan.', 'auto-ai-seo' ) . '</p>';
+			return;
+		}
+		echo '<table class="wp-list-table widefat striped" style="max-width:900px"><thead><tr><th>'
+			. esc_html__( 'Post', 'auto-ai-seo' ) . '</th><th>' . esc_html__( 'Dead link', 'auto-ai-seo' )
+			. '</th><th>' . esc_html__( 'Why', 'auto-ai-seo' ) . '</th></tr></thead><tbody>';
+		foreach ( $rows as $r ) {
+			$broken = (array) maybe_unserialize( $r->meta_value );
+			foreach ( $broken as $b ) {
+				echo '<tr><td><a href="' . esc_url( get_edit_post_link( (int) $r->post_id ) ) . '">'
+					. esc_html( get_the_title( (int) $r->post_id ) ) . '</a></td>'
+					. '<td><code>' . esc_html( isset( $b['url'] ) ? $b['url'] : '' ) . '</code></td>'
+					. '<td>' . esc_html( isset( $b['why'] ) ? $b['why'] : '' ) . '</td></tr>';
+			}
+		}
+		echo '</tbody></table>';
 	}
 
 	/** 操作回执 slug → 人话。URL 里传 slug 是刻意的:链接与语言无关,翻译发生在渲染时。 */
