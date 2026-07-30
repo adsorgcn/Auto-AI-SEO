@@ -40,6 +40,7 @@ require_once AASEO_DIR . 'includes/class-aaseo-jobs.php';
 require_once AASEO_DIR . 'includes/class-aaseo-robots.php';
 require_once AASEO_DIR . 'includes/class-aaseo-meta.php';
 require_once AASEO_DIR . 'includes/class-aaseo-links.php';
+require_once AASEO_DIR . 'includes/class-aaseo-schema.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-meta.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-term.php';
@@ -58,6 +59,7 @@ function aaseo_boot() {
 	// 机械模块:不进队列,直接挂钩子(它没有候选集,也不花 token)
 	AASEO_Robots::init();
 	AASEO_Meta::init();
+	AASEO_Schema::init();
 
 	if ( is_admin() ) {
 		require_once AASEO_DIR . 'admin/class-aaseo-admin.php';
