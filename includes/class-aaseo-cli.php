@@ -261,6 +261,35 @@ class AASEO_CLI {
 	}
 
 	/**
+	 * robots.txt 规则与 noindex 头自检。
+	 *
+	 * @subcommand robots
+	 */
+	public function robots() {
+		$p = AASEO_Robots::preview();
+		WP_CLI::log( 'robots.txt rules : ' . ( $p['enabled'] ? 'on' : 'off' ) );
+		WP_CLI::log( 'noindex headers  : ' . ( $p['headers'] ? 'on' : 'off' ) );
+		WP_CLI::log( 'site path        : ' . ( '' === $p['home_path'] ? '(domain root)' : $p['home_path'] ) );
+		WP_CLI::log( 'login path       : ' . ( '' === $p['login_path'] ? '(renamed — deliberately not published)' : $p['login_path'] ) );
+		WP_CLI::log( 'noindex paths    : ' . ( $p['noindex_paths'] ? implode( ', ', $p['noindex_paths'] ) : '(none registered)' ) );
+		if ( $p['dropped'] ) {
+			WP_CLI::warning( 'dropped (would hide a noindex from crawlers, or over the rule cap): ' . implode( ', ', $p['dropped'] ) );
+		}
+		if ( $p['physical_file'] ) {
+			WP_CLI::warning( sprintf(
+				'A real file exists at %s — the web server serves it and WordPress rules never apply. Edit or remove it yourself; this plugin will not touch it.',
+				$p['physical_file']
+			) );
+		}
+		WP_CLI::log( '' );
+		WP_CLI::log( '--- block this plugin appends ---' );
+		WP_CLI::log( '' === $p['block'] ? '(nothing)' : $p['block'] );
+		WP_CLI::log( '' );
+		// 刻意不 output-buffer do_robots():那会把别的插件的 robots 回调再触发一遍
+		WP_CLI::log( 'Full live body: curl -s ' . esc_url_raw( home_url( '/robots.txt' ) ) );
+	}
+
+	/**
 	 * 用量与花费账单。
 	 *
 	 * @subcommand usage

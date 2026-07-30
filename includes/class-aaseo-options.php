@@ -38,6 +38,11 @@ class AASEO_Options {
 			'daily_token_cap' => 2000000,   // 0 = 不限
 			'price_override'  => array(),
 			'jobs'            => array(),   // 各模块自己的开关与参数
+			// 机械模块(不调 AI)的开关。两个机制彼此独立,所以是两个开关而不是一个。
+			'robots'          => array(
+				'robots_txt'      => true,
+				'noindex_headers' => true,
+			),
 		);
 	}
 
@@ -55,6 +60,22 @@ class AASEO_Options {
 		$new = array_merge( self::all(), $patch );
 		update_option( self::KEY, $new, false );
 		return $new;
+	}
+
+	/**
+	 * robots 模块配置。
+	 *
+	 * 注意这里自己又 merge 了一次默认值:all() 用的是**浅** array_merge,
+	 * 所以只保存了 robots 里一个键时,另一个键会整个消失(取到 null 而不是默认值)。
+	 * 凡是嵌套数组的配置都得这样各自兜一层 —— 这是 all() 的既有坑,不是本方法多余。
+	 */
+	public static function robots( $key = null, $fallback = null ) {
+		$d    = self::defaults();
+		$conf = array_merge( $d['robots'], (array) self::get( 'robots', array() ) );
+		if ( null === $key ) {
+			return $conf;
+		}
+		return array_key_exists( $key, $conf ) ? $conf[ $key ] : $fallback;
 	}
 
 	/** 模块级配置 */

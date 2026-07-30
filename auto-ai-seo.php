@@ -37,6 +37,7 @@ require_once AASEO_DIR . 'includes/class-aaseo-probe.php';
 require_once AASEO_DIR . 'includes/class-aaseo-image.php';
 require_once AASEO_DIR . 'includes/abstract-aaseo-job.php';
 require_once AASEO_DIR . 'includes/class-aaseo-jobs.php';
+require_once AASEO_DIR . 'includes/class-aaseo-robots.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
 
 register_activation_hook( __FILE__, array( 'AASEO_Install', 'activate' ) );
@@ -48,6 +49,8 @@ function aaseo_boot() {
 	// 不调 load_plugin_textdomain():WP 4.6+ 对 wp.org 托管的插件会自动加载翻译。
 	AASEO_Install::maybe_upgrade();
 	AASEO_Jobs::init();
+	// 机械模块:不进队列,直接挂钩子(它没有候选集,也不花 token)
+	AASEO_Robots::init();
 
 	if ( is_admin() ) {
 		require_once AASEO_DIR . 'admin/class-aaseo-admin.php';
