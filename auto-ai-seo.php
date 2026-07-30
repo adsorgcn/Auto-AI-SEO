@@ -41,6 +41,7 @@ require_once AASEO_DIR . 'includes/class-aaseo-robots.php';
 require_once AASEO_DIR . 'includes/class-aaseo-meta.php';
 require_once AASEO_DIR . 'includes/class-aaseo-links.php';
 require_once AASEO_DIR . 'includes/class-aaseo-schema.php';
+require_once AASEO_DIR . 'includes/class-aaseo-upload.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-alt.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-meta.php';
 require_once AASEO_DIR . 'includes/jobs/class-aaseo-job-term.php';
@@ -60,6 +61,7 @@ function aaseo_boot() {
 	AASEO_Robots::init();
 	AASEO_Meta::init();
 	AASEO_Schema::init();
+	AASEO_Upload::init();
 
 	if ( is_admin() ) {
 		require_once AASEO_DIR . 'admin/class-aaseo-admin.php';
