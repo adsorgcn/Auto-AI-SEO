@@ -1,0 +1,685 @@
+# Copyright (C) 2026 静水流深 (adsorgcn)
+# This file is distributed under the MIT.
+msgid ""
+msgstr ""
+"Project-Id-Version: Auto-AI-SEO 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/auto-ai-seo\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-07-31T04:05:29+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: auto-ai-seo\n"
+
+#. Plugin Name of the plugin
+#: auto-ai-seo.php
+#: admin/class-aaseo-admin.php:25
+#: admin/class-aaseo-admin.php:26
+#: admin/class-aaseo-admin.php:173
+msgid "Auto-AI-SEO"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: auto-ai-seo.php
+msgid "https://github.com/adsorgcn/Auto-AI-SEO"
+msgstr ""
+
+#. Description of the plugin
+#: auto-ai-seo.php
+msgid "SEO that understands your content, not just matches it. AI-powered descriptions, image alt text, internal links and structured data for WordPress — in any language."
+msgstr ""
+
+#. Author of the plugin
+#: auto-ai-seo.php
+msgid "静水流深 (adsorgcn)"
+msgstr ""
+
+#. Author URI of the plugin
+#: auto-ai-seo.php
+msgid "https://github.com/adsorgcn"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:35
+#: admin/class-aaseo-admin.php:36
+msgid "Internal links"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:52
+#: admin/class-aaseo-admin.php:125
+#: admin/class-aaseo-admin.php:159
+#: admin/class-aaseo-admin.php:452
+#: admin/class-aaseo-admin.php:479
+#: admin/class-aaseo-admin.php:528
+msgid "Insufficient permissions."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:176
+msgid "Settings saved."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:183
+msgid "Add an API key below to get started. Nothing runs until you do."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:187
+msgid "Tasks"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:190
+msgid "Usage today"
+msgstr ""
+
+#. translators: 1: calls, 2: tokens, 3: money
+#: admin/class-aaseo-admin.php:195
+#, php-format
+msgid "%1$s calls · %2$s tokens · %3$s"
+msgstr ""
+
+#. translators: 1: cap, 2: remaining
+#: admin/class-aaseo-admin.php:204
+#, php-format
+msgid "Daily cap %1$s tokens — %2$s remaining."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:212
+msgid "Environment"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:219
+#: admin/class-aaseo-admin.php:272
+msgid "Robots & indexing"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:222
+msgid "Broken links"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:225
+msgid "Settings"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:231
+msgid "API key"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:234
+msgid "Saved — leave blank to keep"
+msgstr ""
+
+#. translators: %s: signup link
+#: admin/class-aaseo-admin.php:239
+#, php-format
+msgid "Any OpenAI-compatible provider. No account yet? %s — signing up through that link grants bonus credits to both you and this project, and the free credits go a long way."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:240
+msgid "get a key from SiliconFlow"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:247
+msgid "API base URL"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:249
+msgid "HTTPS only."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:252
+msgid "Vision models"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:254
+msgid "One per line, in priority order. If one is unavailable the next is used automatically."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:257
+msgid "Text models"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:261
+msgid "Daily token cap"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:264
+msgid "Batches stop when the cap is hit and continue the next day. 0 = no cap."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:267
+msgid "Site context"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:268
+msgid "e.g. Tech review blog; recurring brands: xiaomi, dji, anker"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:269
+msgid "Describing your niche and recurring proper nouns noticeably improves accuracy."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:277
+msgid "Append rules to robots.txt"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:279
+msgid "Adds to what WordPress and other plugins output — never replaces it."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:283
+msgid "Send noindex headers on outbound redirects"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:285
+msgid "Keeps redirect endpoints (e.g. affiliate short links) out of search results while staying crawlable — blocking them in robots.txt would hide the noindex from crawlers and backfire."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:290
+msgid "Structured data & canonicals"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:295
+msgid "Output JSON-LD structured data"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:297
+msgid "Article, breadcrumb, site and organization markup. Turn off if another SEO plugin already provides it."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:301
+msgid "Add canonical tags on home and archive pages"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:303
+msgid "Only where themes commonly miss them — single posts are left to your theme, duplicate canonicals are worse than none."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:308
+msgid "Meta description tag"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:312
+msgid "Print the meta description tag"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:314
+msgid "Turn off if your theme or SEO plugin already prints one — descriptions are still written and stored either way, and the aaseo_description_meta_key filter can store them directly in your theme's own field."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:318
+msgid "Save settings"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:327
+msgid "No task modules are active yet."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:331
+msgid "Task"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:331
+msgid "Pending"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:331
+msgid "Progress"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:331
+msgid "Status"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:331
+msgid "Actions"
+msgstr ""
+
+#. translators: %d: number of failed items
+#: admin/class-aaseo-admin.php:349
+#, php-format
+msgid "(%d failed)"
+msgstr ""
+
+#. translators: 1: count, 2: reason
+#: admin/class-aaseo-admin.php:361
+#, php-format
+msgid "%1$d skipped — %2$s"
+msgstr ""
+
+#. translators: 1: count, 2: reason
+#: admin/class-aaseo-admin.php:372
+#, php-format
+msgid "%1$d rewritten — %2$s"
+msgstr ""
+
+#. translators: %s: file path
+#: admin/class-aaseo-admin.php:403
+#, php-format
+msgid "A real robots.txt file exists at %s. The web server serves that file directly, so no WordPress rules (from this or any plugin) apply. Edit or remove the file yourself — this plugin will never touch it."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:410
+msgid "robots.txt rules"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:411
+#: admin/class-aaseo-admin.php:413
+msgid "on"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:411
+#: admin/class-aaseo-admin.php:413
+msgid "off"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:412
+msgid "noindex headers"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:415
+msgid "noindex paths"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:418
+msgid "Registered by other plugins via the aaseo_noindex_paths filter. These stay crawlable on purpose: crawlers must be able to fetch a URL to see its noindex."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:420
+msgid "none registered"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:425
+msgid "dropped rules"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:427
+msgid "These Disallow rules were refused: they overlap a noindex path, and blocking crawl there would hide the noindex from crawlers (or the 50-rule cap was hit)."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:431
+msgid "appended block"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:435
+msgid "nothing (module disabled or no rules)"
+msgstr ""
+
+#. translators: %s: robots.txt URL
+#: admin/class-aaseo-admin.php:439
+#, php-format
+msgid "Live file: %s"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:538
+#: includes/jobs/class-aaseo-job-ilink.php:26
+msgid "Internal link suggestions"
+msgstr ""
+
+#. translators: 1: succeeded, 2: skipped as stale, 3: failed
+#: admin/class-aaseo-admin.php:546
+#, php-format
+msgid "Bulk done: %1$d processed, %2$d skipped as stale (post changed / target gone / already linked), %3$d failed."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:558
+msgid "Nothing is ever applied automatically. Approving inserts the link at the first safe occurrence of the anchor; rejecting remembers the pair and never suggests it again."
+msgstr ""
+
+#. translators: 1: applied count, 2: rejected count
+#: admin/class-aaseo-admin.php:562
+#, php-format
+msgid "So far: %1$s applied, %2$s rejected."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:569
+msgid "No suggestions waiting. Run the “Internal link suggestions” task to generate more."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:578
+msgid "Select All"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:581
+msgid "In post"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:582
+msgid "Anchor in context"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:583
+msgid "Links to"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:584
+msgid "Score"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:585
+#: admin/class-aaseo-admin.php:670
+msgid "Why"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:586
+msgid "Decision"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:603
+msgid "Approve"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:603
+msgid "Reject"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:618
+msgid "Insert links for ALL selected suggestions?"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:619
+msgid "Approve selected"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:622
+msgid "Reject all selected? These pairs will never be suggested again."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:623
+msgid "Reject selected"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:625
+msgid "Same safeguards as one-by-one: changed posts are skipped as stale, never forced."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:665
+msgid "No confirmed broken links. Run the “Broken link check” task to scan."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:669
+msgid "Post"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:669
+msgid "Dead link"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:686
+msgid "Task started."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:687
+msgid "Task paused."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:688
+msgid "Task resumed."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:689
+msgid "Queued actions cancelled."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:690
+msgid "Link inserted into the post."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:691
+msgid "Suggestion rejected — this pair will never be suggested again."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:699
+msgid "idle"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:700
+msgid "running"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:701
+msgid "paused"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:702
+msgid "done"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:709
+msgid "Pause"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:709
+#: admin/class-aaseo-admin.php:712
+msgid "Cancel"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:712
+msgid "Resume"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:714
+msgid "Start"
+msgstr ""
+
+#: includes/class-aaseo-client.php:73
+msgid "No API key configured."
+msgstr ""
+
+#: includes/class-aaseo-client.php:79
+msgid "No models configured."
+msgstr ""
+
+#: includes/class-aaseo-client.php:114
+msgid "All models failed."
+msgstr ""
+
+#: includes/class-aaseo-client.php:215
+msgid "Model returned no content."
+msgstr ""
+
+#: includes/class-aaseo-client.php:218
+msgid "Output truncated by max_tokens."
+msgstr ""
+
+#: includes/class-aaseo-image.php:26
+msgid "Not an image attachment."
+msgstr ""
+
+#: includes/class-aaseo-image.php:77
+msgid "Image file not found locally."
+msgstr ""
+
+#. translators: %s: job slug
+#: includes/class-aaseo-jobs.php:81
+#, php-format
+msgid "Unknown job: %s"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:84
+msgid "Job is not ready to run (API key missing?)"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:87
+msgid "Action Scheduler unavailable."
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:251
+msgid "Daily token cap reached; will continue tomorrow."
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:403
+msgid "image file no longer exists on disk (orphaned attachment record — safe to clean up)"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:404
+msgid "too small to be meaningful content (logo/icon — alt is intentionally left empty)"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:405
+msgid "already written by a human — left untouched"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:406
+msgid "existing description already does its job (AI-judged) — left untouched"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:407
+msgid "post has no content to describe"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:408
+msgid "post no longer exists or is not published"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:409
+msgid "too few posts to be worth describing (threshold configurable)"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:410
+msgid "no related posts share a category or tag — nothing worth linking to"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:411
+msgid "reviewed — no link scored high enough to suggest (that is a pass, not a failure)"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:412
+msgid "no outbound links to check"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:413
+msgid "all outbound links respond — nothing to report"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:420
+msgid "first draft ran too long and was rewritten to fit"
+msgstr ""
+
+#: includes/class-aaseo-jobs.php:421
+msgid "first draft came back in the wrong language and was rewritten in the site's language"
+msgstr ""
+
+#: includes/class-aaseo-links.php:105
+#: includes/class-aaseo-links.php:158
+msgid "Suggestion no longer pending."
+msgstr ""
+
+#: includes/class-aaseo-links.php:115
+msgid "Source or target post is gone; suggestion marked stale."
+msgstr ""
+
+#: includes/class-aaseo-links.php:120
+msgid "Post already links to this target; suggestion marked stale."
+msgstr ""
+
+#: includes/class-aaseo-links.php:127
+msgid "Anchor text no longer found in the post (content changed?); suggestion marked stale."
+msgstr ""
+
+#: includes/class-aaseo-links.php:141
+msgid "This post contains markup (e.g. iframes) that your account cannot re-save; approving would strip it. Ask an administrator with unfiltered_html to approve this one."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:186
+msgid "WP-CLI available — batches run with no web timeout. Strongest path."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:187
+msgid "Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:188
+msgid "Limited environment — processing a couple of items per request. Consider running via WP-CLI."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:193
+msgid "PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value."
+msgstr ""
+
+#. translators: 1: sample count, 2: median seconds, 3: timeout seconds
+#: includes/class-aaseo-probe.php:198
+#, php-format
+msgid "Measured on this site: %1$d samples, median %2$ss per item — per-call timeout set to %3$ss."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:202
+msgid "No measurements yet — conservative defaults in use. They tighten automatically once a batch has run."
+msgstr ""
+
+#. translators: %s: percentage
+#: includes/class-aaseo-probe.php:208
+#, php-format
+msgid "Recent failures detected — throughput reduced to %s%% until things recover."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:213
+msgid "Jetpack image CDN detected — images are resized on the CDN, saving local processing."
+msgstr ""
+
+#: includes/class-aaseo-schema.php:182
+#: includes/class-aaseo-schema.php:214
+msgid "Home"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-alt.php:22
+msgid "Image alt text"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-alt.php:26
+msgid "Describe what each image actually shows, so every image gets its own alt text."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-alt.php:161
+msgid "Could not describe this image; left empty rather than guessing."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-deadlink.php:32
+msgid "Broken link check"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-deadlink.php:36
+msgid "Check outbound links; only confidently dead ones are reported — ambiguous cases are judged by AI, bot-blocking is never mistaken for death."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-deadlink.php:213
+msgid "domain no longer resolves"
+msgstr ""
+
+#. translators: %s: final URL
+#: includes/jobs/class-aaseo-job-deadlink.php:287
+#, php-format
+msgid "AI-judged dead — now lands on %s"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-ilink.php:30
+msgid "Find long-tail phrases in each post that should link to another post. Suggestions wait for your review — nothing is applied automatically."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-ilink.php:128
+msgid "Model returned unparseable output; post left for the next run."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-meta.php:26
+msgid "Meta descriptions"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-meta.php:30
+msgid "Judge each post’s search description; rewrite only the ones that fail — from an understanding of the whole article, not a truncation."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-meta.php:163
+msgid "Generated description failed validation; post left for the next run."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-term.php:22
+msgid "Archive descriptions"
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-term.php:26
+msgid "Describe what each category or tag actually collects, based on the posts inside it."
+msgstr ""
+
+#: includes/jobs/class-aaseo-job-term.php:155
+msgid "Generated description failed validation; term left for the next run."
+msgstr ""

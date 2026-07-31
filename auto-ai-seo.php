@@ -53,8 +53,14 @@ register_deactivation_hook( __FILE__, array( 'AASEO_Install', 'deactivate' ) );
 
 add_action( 'plugins_loaded', 'aaseo_boot' );
 
+// 自带 languages/ 里的翻译(GitHub 安装的用户也有中文界面)。
+// 上架 wp.org 后,translate.wordpress.org 的社区翻译优先级更高,会自动覆盖这份。
+// 挂 init 而非 plugins_loaded:WP 6.7 起过早加载文本域会触发 just-in-time 告警。
+add_action( 'init', function () {
+	load_plugin_textdomain( 'auto-ai-seo', false, dirname( plugin_basename( AASEO_FILE ) ) . '/languages' );
+} );
+
 function aaseo_boot() {
-	// 不调 load_plugin_textdomain():WP 4.6+ 对 wp.org 托管的插件会自动加载翻译。
 	AASEO_Install::maybe_upgrade();
 	AASEO_Jobs::init();
 	// 机械模块:不进队列,直接挂钩子(它没有候选集,也不花 token)

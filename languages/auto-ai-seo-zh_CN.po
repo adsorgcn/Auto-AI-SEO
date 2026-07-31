@@ -1,0 +1,682 @@
+# Copyright (C) 2026 静水流深 (adsorgcn)
+# This file is distributed under the MIT.
+msgid ""
+msgstr ""
+"Project-Id-Version: Auto-AI-SEO 1.0.0\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: hand-translated\n"
+"X-Domain: auto-ai-seo\n"
+
+#. Plugin Name of the plugin
+#: auto-ai-seo.php
+#: admin/class-aaseo-admin.php:25
+#: admin/class-aaseo-admin.php:26
+#: admin/class-aaseo-admin.php:173
+msgid "Auto-AI-SEO"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: auto-ai-seo.php
+msgid "https://github.com/adsorgcn/Auto-AI-SEO"
+msgstr ""
+
+#. Description of the plugin
+#: auto-ai-seo.php
+msgid "SEO that understands your content, not just matches it. AI-powered descriptions, image alt text, internal links and structured data for WordPress — in any language."
+msgstr "读懂内容的 SEO,而非匹配模式的 SEO。AI 驱动的页面描述、图片 alt 文本、内链与结构化数据,任何语言开箱即用。"
+
+#. Author of the plugin
+#: auto-ai-seo.php
+msgid "静水流深 (adsorgcn)"
+msgstr ""
+
+#. Author URI of the plugin
+#: auto-ai-seo.php
+msgid "https://github.com/adsorgcn"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:35
+#: admin/class-aaseo-admin.php:36
+msgid "Internal links"
+msgstr "内链"
+
+#: admin/class-aaseo-admin.php:52
+#: admin/class-aaseo-admin.php:125
+#: admin/class-aaseo-admin.php:159
+#: admin/class-aaseo-admin.php:452
+#: admin/class-aaseo-admin.php:479
+#: admin/class-aaseo-admin.php:528
+msgid "Insufficient permissions."
+msgstr "权限不足。"
+
+#: admin/class-aaseo-admin.php:176
+msgid "Settings saved."
+msgstr "设置已保存。"
+
+#: admin/class-aaseo-admin.php:183
+msgid "Add an API key below to get started. Nothing runs until you do."
+msgstr "先在下方填入 API 密钥。填入之前,不会有任何任务运行。"
+
+#: admin/class-aaseo-admin.php:187
+msgid "Tasks"
+msgstr "任务"
+
+#: admin/class-aaseo-admin.php:190
+msgid "Usage today"
+msgstr "今日用量"
+
+#. translators: 1: calls, 2: tokens, 3: money
+#: admin/class-aaseo-admin.php:195
+#, php-format
+msgid "%1$s calls · %2$s tokens · %3$s"
+msgstr "%1$s 次调用 · %2$s tokens · %3$s"
+
+#. translators: 1: cap, 2: remaining
+#: admin/class-aaseo-admin.php:204
+#, php-format
+msgid "Daily cap %1$s tokens — %2$s remaining."
+msgstr "每日上限 %1$s tokens——剩余 %2$s。"
+
+#: admin/class-aaseo-admin.php:212
+msgid "Environment"
+msgstr "运行环境"
+
+#: admin/class-aaseo-admin.php:219
+#: admin/class-aaseo-admin.php:272
+msgid "Robots & indexing"
+msgstr "Robots 与收录"
+
+#: admin/class-aaseo-admin.php:222
+msgid "Broken links"
+msgstr "死链"
+
+#: admin/class-aaseo-admin.php:225
+msgid "Settings"
+msgstr "设置"
+
+#: admin/class-aaseo-admin.php:231
+msgid "API key"
+msgstr "API 密钥"
+
+#: admin/class-aaseo-admin.php:234
+msgid "Saved — leave blank to keep"
+msgstr "已保存——留空表示不修改"
+
+#. translators: %s: signup link
+#: admin/class-aaseo-admin.php:239
+#, php-format
+msgid "Any OpenAI-compatible provider. No account yet? %s — signing up through that link grants bonus credits to both you and this project, and the free credits go a long way."
+msgstr "任何 OpenAI 兼容的服务商都可以。还没有账号?%s——通过该链接注册,你和本项目都会获得赠送额度,免费额度足够用很久。"
+
+#: admin/class-aaseo-admin.php:240
+msgid "get a key from SiliconFlow"
+msgstr "到 SiliconFlow 领一个密钥"
+
+#: admin/class-aaseo-admin.php:247
+msgid "API base URL"
+msgstr "API 基础地址"
+
+#: admin/class-aaseo-admin.php:249
+msgid "HTTPS only."
+msgstr "仅支持 HTTPS。"
+
+#: admin/class-aaseo-admin.php:252
+msgid "Vision models"
+msgstr "视觉模型"
+
+#: admin/class-aaseo-admin.php:254
+msgid "One per line, in priority order. If one is unavailable the next is used automatically."
+msgstr "每行一个,按优先级排序。前一个不可用时自动切换到下一个。"
+
+#: admin/class-aaseo-admin.php:257
+msgid "Text models"
+msgstr "文本模型"
+
+#: admin/class-aaseo-admin.php:261
+msgid "Daily token cap"
+msgstr "每日 token 上限"
+
+#: admin/class-aaseo-admin.php:264
+msgid "Batches stop when the cap is hit and continue the next day. 0 = no cap."
+msgstr "达到上限批次即停,次日自动继续。0 表示不限。"
+
+#: admin/class-aaseo-admin.php:267
+msgid "Site context"
+msgstr "站点背景"
+
+#: admin/class-aaseo-admin.php:268
+msgid "e.g. Tech review blog; recurring brands: xiaomi, dji, anker"
+msgstr "例如:数码评测博客;常见品牌:小米、大疆、安克"
+
+#: admin/class-aaseo-admin.php:269
+msgid "Describing your niche and recurring proper nouns noticeably improves accuracy."
+msgstr "描述你的领域和常出现的专有名词,能明显提高准确率。"
+
+#: admin/class-aaseo-admin.php:277
+msgid "Append rules to robots.txt"
+msgstr "向 robots.txt 追加规则"
+
+#: admin/class-aaseo-admin.php:279
+msgid "Adds to what WordPress and other plugins output — never replaces it."
+msgstr "只在 WordPress 与其他插件的输出之后追加——绝不替换。"
+
+#: admin/class-aaseo-admin.php:283
+msgid "Send noindex headers on outbound redirects"
+msgstr "为出站跳转发送 noindex 响应头"
+
+#: admin/class-aaseo-admin.php:285
+msgid "Keeps redirect endpoints (e.g. affiliate short links) out of search results while staying crawlable — blocking them in robots.txt would hide the noindex from crawlers and backfire."
+msgstr "让跳转端点(如联盟短链)不进搜索结果,同时保持可抓取——若用 robots.txt 屏蔽,爬虫反而看不到 noindex,适得其反。"
+
+#: admin/class-aaseo-admin.php:290
+msgid "Structured data & canonicals"
+msgstr "结构化数据与 Canonical"
+
+#: admin/class-aaseo-admin.php:295
+msgid "Output JSON-LD structured data"
+msgstr "输出 JSON-LD 结构化数据"
+
+#: admin/class-aaseo-admin.php:297
+msgid "Article, breadcrumb, site and organization markup. Turn off if another SEO plugin already provides it."
+msgstr "文章、面包屑、站点与组织标记。若已有其他 SEO 插件提供,请关闭。"
+
+#: admin/class-aaseo-admin.php:301
+msgid "Add canonical tags on home and archive pages"
+msgstr "为首页与归档页添加 canonical 标签"
+
+#: admin/class-aaseo-admin.php:303
+msgid "Only where themes commonly miss them — single posts are left to your theme, duplicate canonicals are worse than none."
+msgstr "只补主题普遍缺失的位置——单篇交给你的主题,重复的 canonical 比没有更糟。"
+
+#: admin/class-aaseo-admin.php:308
+msgid "Meta description tag"
+msgstr "META 描述标签"
+
+#: admin/class-aaseo-admin.php:312
+msgid "Print the meta description tag"
+msgstr "输出 meta description 标签"
+
+#: admin/class-aaseo-admin.php:314
+msgid "Turn off if your theme or SEO plugin already prints one — descriptions are still written and stored either way, and the aaseo_description_meta_key filter can store them directly in your theme's own field."
+msgstr "若你的主题或 SEO 插件已输出该标签,请关闭——描述照常生成并保存,且可通过 aaseo_description_meta_key 过滤器直接写入主题自己的字段。"
+
+#: admin/class-aaseo-admin.php:318
+msgid "Save settings"
+msgstr "保存设置"
+
+#: admin/class-aaseo-admin.php:327
+msgid "No task modules are active yet."
+msgstr "尚无启用的任务模块。"
+
+#: admin/class-aaseo-admin.php:331
+msgid "Task"
+msgstr "任务"
+
+#: admin/class-aaseo-admin.php:331
+msgid "Pending"
+msgstr "待处理"
+
+#: admin/class-aaseo-admin.php:331
+msgid "Progress"
+msgstr "进度"
+
+#: admin/class-aaseo-admin.php:331
+msgid "Status"
+msgstr "状态"
+
+#: admin/class-aaseo-admin.php:331
+msgid "Actions"
+msgstr "操作"
+
+#. translators: %d: number of failed items
+#: admin/class-aaseo-admin.php:349
+#, php-format
+msgid "(%d failed)"
+msgstr "(%d 个失败)"
+
+#. translators: 1: count, 2: reason
+#: admin/class-aaseo-admin.php:361
+#, php-format
+msgid "%1$d skipped — %2$s"
+msgstr "%1$d 个跳过——%2$s"
+
+#. translators: 1: count, 2: reason
+#: admin/class-aaseo-admin.php:372
+#, php-format
+msgid "%1$d rewritten — %2$s"
+msgstr "%1$d 个重写——%2$s"
+
+#. translators: %s: file path
+#: admin/class-aaseo-admin.php:403
+#, php-format
+msgid "A real robots.txt file exists at %s. The web server serves that file directly, so no WordPress rules (from this or any plugin) apply. Edit or remove the file yourself — this plugin will never touch it."
+msgstr "%s 处存在物理 robots.txt 文件。Web 服务器会直接读取该文件,WordPress 的任何规则(本插件或其他插件的)都不会生效。请自行编辑或删除该文件——本插件绝不会碰它。"
+
+#: admin/class-aaseo-admin.php:410
+msgid "robots.txt rules"
+msgstr "robots.txt 规则"
+
+#: admin/class-aaseo-admin.php:411
+#: admin/class-aaseo-admin.php:413
+msgid "on"
+msgstr "开"
+
+#: admin/class-aaseo-admin.php:411
+#: admin/class-aaseo-admin.php:413
+msgid "off"
+msgstr "关"
+
+#: admin/class-aaseo-admin.php:412
+msgid "noindex headers"
+msgstr "noindex 响应头"
+
+#: admin/class-aaseo-admin.php:415
+msgid "noindex paths"
+msgstr "noindex 路径"
+
+#: admin/class-aaseo-admin.php:418
+msgid "Registered by other plugins via the aaseo_noindex_paths filter. These stay crawlable on purpose: crawlers must be able to fetch a URL to see its noindex."
+msgstr "由其他插件通过 aaseo_noindex_paths 过滤器注册。这些路径特意保持可抓取:爬虫必须能访问 URL,才能看到它的 noindex。"
+
+#: admin/class-aaseo-admin.php:420
+msgid "none registered"
+msgstr "无注册项"
+
+#: admin/class-aaseo-admin.php:425
+msgid "dropped rules"
+msgstr "被拒绝的规则"
+
+#: admin/class-aaseo-admin.php:427
+msgid "These Disallow rules were refused: they overlap a noindex path, and blocking crawl there would hide the noindex from crawlers (or the 50-rule cap was hit)."
+msgstr "这些 Disallow 规则被拒绝:它们与 noindex 路径重叠,屏蔽抓取会让爬虫看不到 noindex(或已达 50 条规则上限)。"
+
+#: admin/class-aaseo-admin.php:431
+msgid "appended block"
+msgstr "追加的规则块"
+
+#: admin/class-aaseo-admin.php:435
+msgid "nothing (module disabled or no rules)"
+msgstr "无(模块已关闭或没有规则)"
+
+#. translators: %s: robots.txt URL
+#: admin/class-aaseo-admin.php:439
+#, php-format
+msgid "Live file: %s"
+msgstr "线上文件:%s"
+
+#: admin/class-aaseo-admin.php:538
+#: includes/jobs/class-aaseo-job-ilink.php:26
+msgid "Internal link suggestions"
+msgstr "内链建议"
+
+#. translators: 1: succeeded, 2: skipped as stale, 3: failed
+#: admin/class-aaseo-admin.php:546
+#, php-format
+msgid "Bulk done: %1$d processed, %2$d skipped as stale (post changed / target gone / already linked), %3$d failed."
+msgstr "批量完成:处理 %1$d 条,%2$d 条因失效跳过(文章已改/目标已删/已有链接),%3$d 条失败。"
+
+#: admin/class-aaseo-admin.php:558
+msgid "Nothing is ever applied automatically. Approving inserts the link at the first safe occurrence of the anchor; rejecting remembers the pair and never suggests it again."
+msgstr "任何建议都不会自动生效。批准会在锚文本第一处安全位置插入链接;拒绝会记住这一组合,永不再次建议。"
+
+#. translators: 1: applied count, 2: rejected count
+#: admin/class-aaseo-admin.php:562
+#, php-format
+msgid "So far: %1$s applied, %2$s rejected."
+msgstr "累计:已应用 %1$s 条,已拒绝 %2$s 条。"
+
+#: admin/class-aaseo-admin.php:569
+msgid "No suggestions waiting. Run the “Internal link suggestions” task to generate more."
+msgstr "暂无待审建议。运行“内链建议”任务生成更多。"
+
+#: admin/class-aaseo-admin.php:578
+msgid "Select All"
+msgstr "全选"
+
+#: admin/class-aaseo-admin.php:581
+msgid "In post"
+msgstr "所在文章"
+
+#: admin/class-aaseo-admin.php:582
+msgid "Anchor in context"
+msgstr "锚文本及上下文"
+
+#: admin/class-aaseo-admin.php:583
+msgid "Links to"
+msgstr "指向"
+
+#: admin/class-aaseo-admin.php:584
+msgid "Score"
+msgstr "评分"
+
+#: admin/class-aaseo-admin.php:585
+#: admin/class-aaseo-admin.php:670
+msgid "Why"
+msgstr "理由"
+
+#: admin/class-aaseo-admin.php:586
+msgid "Decision"
+msgstr "决定"
+
+#: admin/class-aaseo-admin.php:603
+msgid "Approve"
+msgstr "批准"
+
+#: admin/class-aaseo-admin.php:603
+msgid "Reject"
+msgstr "拒绝"
+
+#: admin/class-aaseo-admin.php:618
+msgid "Insert links for ALL selected suggestions?"
+msgstr "为所有选中的建议插入链接?"
+
+#: admin/class-aaseo-admin.php:619
+msgid "Approve selected"
+msgstr "批准选中"
+
+#: admin/class-aaseo-admin.php:622
+msgid "Reject all selected? These pairs will never be suggested again."
+msgstr "拒绝所有选中?这些组合将永不再被建议。"
+
+#: admin/class-aaseo-admin.php:623
+msgid "Reject selected"
+msgstr "拒绝选中"
+
+#: admin/class-aaseo-admin.php:625
+msgid "Same safeguards as one-by-one: changed posts are skipped as stale, never forced."
+msgstr "与逐条操作同样的保护:内容已变的文章按失效跳过,绝不强行插入。"
+
+#: admin/class-aaseo-admin.php:665
+msgid "No confirmed broken links. Run the “Broken link check” task to scan."
+msgstr "暂无确认的死链。运行“死链检查”任务进行扫描。"
+
+#: admin/class-aaseo-admin.php:669
+msgid "Post"
+msgstr "文章"
+
+#: admin/class-aaseo-admin.php:669
+msgid "Dead link"
+msgstr "死链"
+
+#: admin/class-aaseo-admin.php:686
+msgid "Task started."
+msgstr "任务已开始。"
+
+#: admin/class-aaseo-admin.php:687
+msgid "Task paused."
+msgstr "任务已暂停。"
+
+#: admin/class-aaseo-admin.php:688
+msgid "Task resumed."
+msgstr "任务已继续。"
+
+#: admin/class-aaseo-admin.php:689
+msgid "Queued actions cancelled."
+msgstr "队列中的动作已取消。"
+
+#: admin/class-aaseo-admin.php:690
+msgid "Link inserted into the post."
+msgstr "链接已插入文章。"
+
+#: admin/class-aaseo-admin.php:691
+msgid "Suggestion rejected — this pair will never be suggested again."
+msgstr "建议已拒绝——这一组合将永不再被建议。"
+
+#: admin/class-aaseo-admin.php:699
+msgid "idle"
+msgstr "空闲"
+
+#: admin/class-aaseo-admin.php:700
+msgid "running"
+msgstr "运行中"
+
+#: admin/class-aaseo-admin.php:701
+msgid "paused"
+msgstr "已暂停"
+
+#: admin/class-aaseo-admin.php:702
+msgid "done"
+msgstr "已完成"
+
+#: admin/class-aaseo-admin.php:709
+msgid "Pause"
+msgstr "暂停"
+
+#: admin/class-aaseo-admin.php:709
+#: admin/class-aaseo-admin.php:712
+msgid "Cancel"
+msgstr "取消"
+
+#: admin/class-aaseo-admin.php:712
+msgid "Resume"
+msgstr "继续"
+
+#: admin/class-aaseo-admin.php:714
+msgid "Start"
+msgstr "开始"
+
+#: includes/class-aaseo-client.php:73
+msgid "No API key configured."
+msgstr "未配置 API 密钥。"
+
+#: includes/class-aaseo-client.php:79
+msgid "No models configured."
+msgstr "未配置模型。"
+
+#: includes/class-aaseo-client.php:114
+msgid "All models failed."
+msgstr "所有模型均失败。"
+
+#: includes/class-aaseo-client.php:215
+msgid "Model returned no content."
+msgstr "模型未返回内容。"
+
+#: includes/class-aaseo-client.php:218
+msgid "Output truncated by max_tokens."
+msgstr "输出被 max_tokens 截断。"
+
+#: includes/class-aaseo-image.php:26
+msgid "Not an image attachment."
+msgstr "不是图片附件。"
+
+#: includes/class-aaseo-image.php:77
+msgid "Image file not found locally."
+msgstr "本地找不到图片文件。"
+
+#. translators: %s: job slug
+#: includes/class-aaseo-jobs.php:81
+#, php-format
+msgid "Unknown job: %s"
+msgstr "未知任务:%s"
+
+#: includes/class-aaseo-jobs.php:84
+msgid "Job is not ready to run (API key missing?)"
+msgstr "任务尚不可运行(是否缺少 API 密钥?)"
+
+#: includes/class-aaseo-jobs.php:87
+msgid "Action Scheduler unavailable."
+msgstr "Action Scheduler 不可用。"
+
+#: includes/class-aaseo-jobs.php:251
+msgid "Daily token cap reached; will continue tomorrow."
+msgstr "已达每日 token 上限,明天自动继续。"
+
+#: includes/class-aaseo-jobs.php:403
+msgid "image file no longer exists on disk (orphaned attachment record — safe to clean up)"
+msgstr "图片文件已不在磁盘上(孤儿附件记录——可放心清理)"
+
+#: includes/class-aaseo-jobs.php:404
+msgid "too small to be meaningful content (logo/icon — alt is intentionally left empty)"
+msgstr "尺寸太小,不构成有意义的内容(logo/图标——alt 特意留空)"
+
+#: includes/class-aaseo-jobs.php:405
+msgid "already written by a human — left untouched"
+msgstr "已有人工撰写——原样保留"
+
+#: includes/class-aaseo-jobs.php:406
+msgid "existing description already does its job (AI-judged) — left untouched"
+msgstr "现有描述已经合格(AI 判定)——原样保留"
+
+#: includes/class-aaseo-jobs.php:407
+msgid "post has no content to describe"
+msgstr "文章没有可描述的内容"
+
+#: includes/class-aaseo-jobs.php:408
+msgid "post no longer exists or is not published"
+msgstr "文章已不存在或未发布"
+
+#: includes/class-aaseo-jobs.php:409
+msgid "too few posts to be worth describing (threshold configurable)"
+msgstr "文章数太少,不值得撰写描述(阈值可配置)"
+
+#: includes/class-aaseo-jobs.php:410
+msgid "no related posts share a category or tag — nothing worth linking to"
+msgstr "没有同分类/同标签的相关文章——没有值得链接的目标"
+
+#: includes/class-aaseo-jobs.php:411
+msgid "reviewed — no link scored high enough to suggest (that is a pass, not a failure)"
+msgstr "已审阅——没有链接达到建议门槛(这是通过,不是失败)"
+
+#: includes/class-aaseo-jobs.php:412
+msgid "no outbound links to check"
+msgstr "没有出站链接可检查"
+
+#: includes/class-aaseo-jobs.php:413
+msgid "all outbound links respond — nothing to report"
+msgstr "所有出站链接均有响应——无需报告"
+
+#: includes/class-aaseo-jobs.php:420
+msgid "first draft ran too long and was rewritten to fit"
+msgstr "初稿过长,已重写至合适长度"
+
+#: includes/class-aaseo-jobs.php:421
+msgid "first draft came back in the wrong language and was rewritten in the site's language"
+msgstr "初稿语言不对,已按站点语言重写"
+
+#: includes/class-aaseo-links.php:105
+#: includes/class-aaseo-links.php:158
+msgid "Suggestion no longer pending."
+msgstr "该建议已不在待审状态。"
+
+#: includes/class-aaseo-links.php:115
+msgid "Source or target post is gone; suggestion marked stale."
+msgstr "来源或目标文章已不存在,建议标记为失效。"
+
+#: includes/class-aaseo-links.php:120
+msgid "Post already links to this target; suggestion marked stale."
+msgstr "文章已链接到该目标,建议标记为失效。"
+
+#: includes/class-aaseo-links.php:127
+msgid "Anchor text no longer found in the post (content changed?); suggestion marked stale."
+msgstr "文章中已找不到锚文本(内容改过?),建议标记为失效。"
+
+#: includes/class-aaseo-links.php:141
+msgid "This post contains markup (e.g. iframes) that your account cannot re-save; approving would strip it. Ask an administrator with unfiltered_html to approve this one."
+msgstr "这篇文章包含你的账号无权重新保存的标记(如 iframe),批准会把它们剥掉。请让拥有 unfiltered_html 权限的管理员来批准这条。"
+
+#: includes/class-aaseo-probe.php:186
+msgid "WP-CLI available — batches run with no web timeout. Strongest path."
+msgstr "WP-CLI 可用——批次不受 Web 超时限制,这是最强路径。"
+
+#: includes/class-aaseo-probe.php:187
+msgid "Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch."
+msgstr "通过 Action Scheduler 运行:任务经回环请求跨请求接力,单次 Web 超时无法中断批次。"
+
+#: includes/class-aaseo-probe.php:188
+msgid "Limited environment — processing a couple of items per request. Consider running via WP-CLI."
+msgstr "受限环境——每个请求只处理少量条目。建议改用 WP-CLI 运行。"
+
+#: includes/class-aaseo-probe.php:193
+msgid "PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value."
+msgstr "PHP 报告无执行时限,但主机常在 PHP 之前掐断 Web 请求——因此采用实测耗时,而非这个报告值。"
+
+#. translators: 1: sample count, 2: median seconds, 3: timeout seconds
+#: includes/class-aaseo-probe.php:198
+#, php-format
+msgid "Measured on this site: %1$d samples, median %2$ss per item — per-call timeout set to %3$ss."
+msgstr "本站实测:%1$d 个样本,单条中位耗时 %2$s 秒——单次调用超时设为 %3$s 秒。"
+
+#: includes/class-aaseo-probe.php:202
+msgid "No measurements yet — conservative defaults in use. They tighten automatically once a batch has run."
+msgstr "尚无实测数据——使用保守默认值,跑过一个批次后自动收紧。"
+
+#. translators: %s: percentage
+#: includes/class-aaseo-probe.php:208
+#, php-format
+msgid "Recent failures detected — throughput reduced to %s%% until things recover."
+msgstr "检测到近期失败——吞吐已降至 %s%%,恢复后自动回升。"
+
+#: includes/class-aaseo-probe.php:213
+msgid "Jetpack image CDN detected — images are resized on the CDN, saving local processing."
+msgstr "检测到 Jetpack 图片 CDN——图片在 CDN 端缩放,节省本地处理。"
+
+#: includes/class-aaseo-schema.php:182
+#: includes/class-aaseo-schema.php:214
+msgid "Home"
+msgstr "首页"
+
+#: includes/jobs/class-aaseo-job-alt.php:22
+msgid "Image alt text"
+msgstr "图片 alt 文本"
+
+#: includes/jobs/class-aaseo-job-alt.php:26
+msgid "Describe what each image actually shows, so every image gets its own alt text."
+msgstr "描述每张图片实际展示的内容,让每张图都有自己的 alt 文本。"
+
+#: includes/jobs/class-aaseo-job-alt.php:161
+msgid "Could not describe this image; left empty rather than guessing."
+msgstr "无法描述这张图片;宁可留空,不做猜测。"
+
+#: includes/jobs/class-aaseo-job-deadlink.php:32
+msgid "Broken link check"
+msgstr "死链检查"
+
+#: includes/jobs/class-aaseo-job-deadlink.php:36
+msgid "Check outbound links; only confidently dead ones are reported — ambiguous cases are judged by AI, bot-blocking is never mistaken for death."
+msgstr "检查出站链接;只报告确认死亡的——模糊情况交给 AI 判断,反爬拦截绝不会被误判为死链。"
+
+#: includes/jobs/class-aaseo-job-deadlink.php:213
+msgid "domain no longer resolves"
+msgstr "域名已无法解析"
+
+#. translators: %s: final URL
+#: includes/jobs/class-aaseo-job-deadlink.php:287
+#, php-format
+msgid "AI-judged dead — now lands on %s"
+msgstr "AI 判定已死——现落在 %s"
+
+#: includes/jobs/class-aaseo-job-ilink.php:30
+msgid "Find long-tail phrases in each post that should link to another post. Suggestions wait for your review — nothing is applied automatically."
+msgstr "在每篇文章中寻找应当链向其他文章的长尾短语。建议等待你审核——不会自动应用任何内容。"
+
+#: includes/jobs/class-aaseo-job-ilink.php:128
+msgid "Model returned unparseable output; post left for the next run."
+msgstr "模型返回无法解析的输出;该文章留待下次运行。"
+
+#: includes/jobs/class-aaseo-job-meta.php:26
+msgid "Meta descriptions"
+msgstr "META 描述"
+
+#: includes/jobs/class-aaseo-job-meta.php:30
+msgid "Judge each post’s search description; rewrite only the ones that fail — from an understanding of the whole article, not a truncation."
+msgstr "先判定每篇文章的搜索描述是否合格;只重写不合格的——基于对全文的理解,而非截断。"
+
+#: includes/jobs/class-aaseo-job-meta.php:163
+msgid "Generated description failed validation; post left for the next run."
+msgstr "生成的描述未通过校验;该文章留待下次运行。"
+
+#: includes/jobs/class-aaseo-job-term.php:22
+msgid "Archive descriptions"
+msgstr "归档描述"
+
+#: includes/jobs/class-aaseo-job-term.php:26
+msgid "Describe what each category or tag actually collects, based on the posts inside it."
+msgstr "基于分类/标签下的实际文章,描述它真正收录的内容。"
+
+#: includes/jobs/class-aaseo-job-term.php:155
+msgid "Generated description failed validation; term left for the next run."
+msgstr "生成的描述未通过校验;该分类/标签留待下次运行。"
