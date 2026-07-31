@@ -3,7 +3,7 @@
  * Plugin Name: Auto-AI-SEO
  * Plugin URI: https://github.com/adsorgcn/Auto-AI-SEO
  * Description: SEO that understands your content, not just matches it. AI-powered descriptions, image alt text, internal links and structured data for WordPress — in any language.
- * Version: 0.1.0
+ * Version: 1.0.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: 静水流深 (adsorgcn)
@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AASEO_VERSION', '0.1.0' );
+define( 'AASEO_VERSION', '1.0.0' );
 define( 'AASEO_FILE', __FILE__ );
 define( 'AASEO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AASEO_URL', plugin_dir_url( __FILE__ ) );

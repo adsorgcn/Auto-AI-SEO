@@ -4,7 +4,7 @@ Tags: seo, ai, alt text, structured data, internal links
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -21,7 +21,8 @@ Auto-AI-SEO reads your content and does the work:
 * **Internal link suggestions** with link text you could read out of context and still know where it goes. Suggestions only — nothing touches published content until you approve it.
 * **Descriptions for category and tag pages**, the ones nobody gets around to.
 * **Broken links that are genuinely broken**, separated from bot-protection responses and redirects.
-* **The mechanical work too**: canonical tags, structured data Google still supports, robots rules and outbound link attributes.
+* **Filenames for pasted screenshots.** Paste an image into the editor and it is saved under a descriptive English filename with alt text — not image-3.png. Files you named yourself are recognized and left alone.
+* **The mechanical work too**: canonical tags, structured data Google still supports, robots rules and outbound link attributes — each behind its own switch.
 
 = Built for any language =
 
@@ -68,7 +69,25 @@ The plugin detects what your server can actually do and sizes its batches accord
 
 Yes. Any OpenAI-compatible endpoint works. Only HTTPS endpoints are accepted.
 
+= My theme (or SEO plugin) already handles descriptions. Can they work together? =
+
+Yes, at either level. On the settings screen you can turn off the plugin's own description tag, JSON-LD and canonicals individually. For deeper integration, three filters are provided: `aaseo_description_meta_key` and `aaseo_term_description_meta_key` change where descriptions are stored — point them at your theme's own SEO field and the theme displays what the AI writes; `aaseo_output_description_tag` suppresses the plugin's tag programmatically.
+
+= There are many suggestions. Do I have to click them one by one? =
+
+No. The internal-link review screen has select-all with bulk approve and bulk reject; every applied link stays individually revertible.
+
 == Changelog ==
+
+= 1.0.0 =
+* Image alt text: vision-based description of what each image actually shows, written in the site language, validated and repaired rather than discarded.
+* Meta descriptions: judge-then-write for posts, pages, categories and tags — descriptions that are already good are kept, not overwritten.
+* Internal links: reviewed suggestions with select-all bulk approve/reject; nothing is applied without approval and every applied link can be reverted.
+* Broken-link audit: tells genuinely dead targets apart from bot walls, rate limits and soft redirects before flagging anything.
+* Robots & indexing: additive robots.txt rules and noindex headers for redirect endpoints, each behind its own switch.
+* Structured data: Article, breadcrumb, site and organization JSON-LD plus canonicals where themes commonly miss them.
+* Pasted screenshots get descriptive English filenames and alt text on upload.
+* Theme integration filters: aaseo_description_meta_key, aaseo_term_description_meta_key, aaseo_output_description_tag.
 
 = 0.1.0 =
 * Framework: background queue, environment probing, model fallback, usage accounting with cost estimates, WP-CLI commands.

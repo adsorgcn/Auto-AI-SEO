@@ -66,6 +66,10 @@ class AASEO_Admin {
 		$cap_in = isset( $_POST['daily_token_cap'] ) ? sanitize_text_field( wp_unslash( $_POST['daily_token_cap'] ) ) : '';
 		$cap    = '' === $cap_in ? $old['daily_token_cap'] : max( 0, (int) $cap_in );
 
+		// meta 描述标签开关挂在 jobs.meta 下;jobs 是嵌套数组,必须整组回写(all() 浅合并)
+		$jobs_patch                       = is_array( $old['jobs'] ) ? $old['jobs'] : array();
+		$jobs_patch['meta']['output_tag'] = isset( $_POST['meta_output_tag'] );
+
 		AASEO_Options::set( array(
 			'api_key'         => $api_key,
 			'api_base'        => $base,
@@ -75,7 +79,7 @@ class AASEO_Admin {
 			'vision_models'   => self::parse_models( 'vision_models', $old['vision_models'] ),
 			'text_models'     => self::parse_models( 'text_models', $old['text_models'] ),
 			/*
-			 * 两个布尔必须整组保存:
+			 * 布尔必须整组保存:
 			 * ① 未勾选的 checkbox 根本不出现在 $_POST 里,所以要按 isset 显式落 false;
 			 * ② all() 是浅合并 —— 只存其中一个键,另一个键会整个消失(取到 null)。
 			 */
@@ -83,6 +87,11 @@ class AASEO_Admin {
 				'robots_txt'      => isset( $_POST['robots_txt'] ),
 				'noindex_headers' => isset( $_POST['noindex_headers'] ),
 			),
+			'schema'          => array(
+				'jsonld'            => isset( $_POST['schema_jsonld'] ),
+				'archive_canonical' => isset( $_POST['schema_archive_canonical'] ),
+			),
+			'jobs'            => $jobs_patch,
 		) );
 
 		wp_safe_redirect( self::url( array( 'saved' => 1 ) ) );
@@ -275,6 +284,34 @@ class AASEO_Admin {
 								</label>
 								<p class="description"><?php esc_html_e( 'Keeps redirect endpoints (e.g. affiliate short links) out of search results while staying crawlable — blocking them in robots.txt would hide the noindex from crawlers and backfire.', 'auto-ai-seo' ); ?></p>
 							</fieldset>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Structured data & canonicals', 'auto-ai-seo' ); ?></th>
+						<td>
+							<fieldset>
+								<label>
+									<input type="checkbox" name="schema_jsonld" <?php checked( (bool) AASEO_Schema::conf( 'jsonld' ) ); ?>>
+									<?php esc_html_e( 'Output JSON-LD structured data', 'auto-ai-seo' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'Article, breadcrumb, site and organization markup. Turn off if another SEO plugin already provides it.', 'auto-ai-seo' ); ?></p>
+								<br>
+								<label>
+									<input type="checkbox" name="schema_archive_canonical" <?php checked( (bool) AASEO_Schema::conf( 'archive_canonical' ) ); ?>>
+									<?php esc_html_e( 'Add canonical tags on home and archive pages', 'auto-ai-seo' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'Only where themes commonly miss them — single posts are left to your theme, duplicate canonicals are worse than none.', 'auto-ai-seo' ); ?></p>
+							</fieldset>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Meta description tag', 'auto-ai-seo' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="meta_output_tag" <?php checked( (bool) AASEO_Options::job( 'meta', 'output_tag', true ) ); ?>>
+								<?php esc_html_e( 'Print the meta description tag', 'auto-ai-seo' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'Turn off if your theme or SEO plugin already prints one — descriptions are still written and stored either way, and the aaseo_description_meta_key filter can store them directly in your theme\'s own field.', 'auto-ai-seo' ); ?></p>
 						</td>
 					</tr>
 				</table>
