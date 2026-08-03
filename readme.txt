@@ -1,5 +1,5 @@
 === Auto-AI-SEO ===
-Contributors: adsorgcn
+Contributors: eastsoft
 Tags: seo, ai, alt text, structured data, internal links
 Requires at least: 6.0
 Tested up to: 7.0
