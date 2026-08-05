@@ -142,8 +142,13 @@ class AASEO_Upload {
 ", $js ) );
 	}
 
+	/**
+	 * 默认**关闭**。这个模块与其他模块有本质区别:它不是用户主动点"开始"的任务,
+	 * 而是挂在上传管道上 —— 一旦开启,此后每张进媒体库的图片(含 sideload/CLI 导入)
+	 * 都会被送到 AI 服务商。这种"默认开启的静默外传"是隐私红线,必须用户明确勾选。
+	 */
 	private static function enabled() {
-		return (bool) apply_filters( 'aaseo_name_uploads', AASEO_Options::job( 'upload', 'enabled', true ) );
+		return (bool) apply_filters( 'aaseo_name_uploads', AASEO_Options::job( 'upload', 'enabled', false ) );
 	}
 
 	/**

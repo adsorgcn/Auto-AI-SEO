@@ -4,7 +4,7 @@
 
 [English] | [简体中文](README.zh-CN.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4.svg)](https://php.net/)
 [![Works in any language](https://img.shields.io/badge/Languages-any-orange.svg)](#built-multilingual-from-day-one)
@@ -112,7 +112,7 @@ This is not a roadmap item. It is a structural consequence of the approach — a
 
 ## License
 
-MIT. Contributions welcome.
+GPL-3.0-or-later (the package bundles Action Scheduler, which is GPLv3). The original code outside `libraries/` is additionally available under the MIT License — see LICENSE-MIT.txt. Contributions welcome.
 
 ---
 

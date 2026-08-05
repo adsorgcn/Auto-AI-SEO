@@ -5,8 +5,8 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 1.0.0
-License: MIT
-License URI: https://opensource.org/licenses/MIT
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 SEO that understands your content instead of matching patterns: AI-written descriptions, image alt text and internal links, in any language.
 
@@ -40,7 +40,7 @@ If the AI is slow, unavailable or unsure, the plugin steps aside and WordPress b
 
 This plugin requires an API key for an OpenAI-compatible AI service. By default it calls SiliconFlow (https://siliconflow.cn); any compatible provider can be used instead.
 
-What is sent, and when: the text of the post or term being processed, and — for image alt text — the image itself. Only when you start a task or publish a post with the relevant feature enabled. Nothing is transmitted until you enter your own API key.
+What is sent, and when: the text of the post or term being processed, and — for image alt text — the image itself. This happens when you start a task from the plugin screen, and, if you switch on "Name pasted screenshots" (off by default), also when an image enters the media library. Outgoing links are fetched directly from your server during a broken-link check, so those sites see your server's IP and your site's URL as the referrer. Nothing is transmitted until you enter your own API key.
 
 SiliconFlow terms of service: https://docs.siliconflow.cn/en/legals/terms-of-service
 SiliconFlow privacy policy: https://docs.siliconflow.cn/en/legals/privacy-policy
@@ -48,6 +48,17 @@ SiliconFlow privacy policy: https://docs.siliconflow.cn/en/legals/privacy-policy
 The author's SiliconFlow referral link appears on the settings screen. Signing up through it grants bonus credits to both the new user and the author. Using it is optional; a key from any compatible provider works identically.
 
 This plugin bundles the Action Scheduler library (https://actionscheduler.org, GPLv3) for background processing.
+
+== License ==
+
+Auto-AI-SEO is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+Bundled third-party code:
+
+* Action Scheduler — Copyright (c) Automattic, Inc. — GPLv3 or later — https://actionscheduler.org
+* mtdowling/cron-expression (inside Action Scheduler) — Copyright (c) 2011 Michael Dowling — MIT
+
+The original code in this plugin (everything outside libraries/) is Copyright (c) 2026 静水流深 and is additionally available under the MIT License; see LICENSE-MIT.txt. The distributed package as a whole is GPL-3.0-or-later, because it bundles Action Scheduler.
 
 == Installation ==
 

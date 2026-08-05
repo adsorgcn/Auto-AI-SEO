@@ -69,6 +69,7 @@ class AASEO_Admin {
 		// meta 描述标签开关挂在 jobs.meta 下;jobs 是嵌套数组,必须整组回写(all() 浅合并)
 		$jobs_patch                       = is_array( $old['jobs'] ) ? $old['jobs'] : array();
 		$jobs_patch['meta']['output_tag'] = isset( $_POST['meta_output_tag'] );
+		$jobs_patch['upload']['enabled']  = isset( $_POST['upload_enabled'] );
 
 		AASEO_Options::set( array(
 			'api_key'         => $api_key,
@@ -312,6 +313,16 @@ class AASEO_Admin {
 								<?php esc_html_e( 'Print the meta description tag', 'auto-ai-seo' ); ?>
 							</label>
 							<p class="description"><?php esc_html_e( 'Turn off if your theme or SEO plugin already prints one — descriptions are still written and stored either way, and the aaseo_description_meta_key filter can store them directly in your theme\'s own field.', 'auto-ai-seo' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Name pasted screenshots', 'auto-ai-seo' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="upload_enabled" <?php checked( (bool) AASEO_Options::job( 'upload', 'enabled', false ) ); ?>>
+								<?php esc_html_e( 'Give uploaded images a descriptive filename and alt text', 'auto-ai-seo' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'Off by default. While on, every image entering the media library — including sideloads and WP-CLI imports — is sent to your AI provider to be described. Images you named yourself are recognised and left alone.', 'auto-ai-seo' ); ?></p>
 						</td>
 					</tr>
 				</table>
