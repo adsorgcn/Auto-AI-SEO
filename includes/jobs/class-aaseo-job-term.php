@@ -19,11 +19,11 @@ class AASEO_Job_Term extends AASEO_Job {
 	}
 
 	public function label() {
-		return __( 'Archive descriptions', 'auto-ai-seo' );
+		return __( 'Archive descriptions', 'ilang-auto-ai-seo' );
 	}
 
 	public function description() {
-		return __( 'Describe what each category or tag actually collects, based on the posts inside it.', 'auto-ai-seo' );
+		return __( 'Describe what each category or tag actually collects, based on the posts inside it.', 'ilang-auto-ai-seo' );
 	}
 
 	public function model_kind() {
@@ -152,7 +152,7 @@ class AASEO_Job_Term extends AASEO_Job {
 		}
 		$desc = $this->validate( AASEO_Client::clean( $res['text'] ), $term->name );
 		if ( '' === $desc ) {
-			return new WP_Error( 'bad_output', __( 'Generated description failed validation; term left for the next run.', 'auto-ai-seo' ) );
+			return new WP_Error( 'bad_output', __( 'Generated description failed validation; term left for the next run.', 'ilang-auto-ai-seo' ) );
 		}
 
 		update_term_meta( $term->term_id, AASEO_Meta::term_meta_key(), $desc );

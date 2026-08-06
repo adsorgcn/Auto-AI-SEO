@@ -23,11 +23,11 @@ class AASEO_Job_Ilink extends AASEO_Job {
 	}
 
 	public function label() {
-		return __( 'Internal link suggestions', 'auto-ai-seo' );
+		return __( 'Internal link suggestions', 'ilang-auto-ai-seo' );
 	}
 
 	public function description() {
-		return __( 'Find long-tail phrases in each post that should link to another post. Suggestions wait for your review — nothing is applied automatically.', 'auto-ai-seo' );
+		return __( 'Find long-tail phrases in each post that should link to another post. Suggestions wait for your review — nothing is applied automatically.', 'ilang-auto-ai-seo' );
 	}
 
 	public function model_kind() {
@@ -125,7 +125,7 @@ class AASEO_Job_Ilink extends AASEO_Job {
 		if ( null === $parsed ) {
 			// 解析不了 —— 不打标记(留在候选集,下次采样可能就正常),并进失败统计:
 			// 静默记成 done:0 会把解析故障伪装成"没有建议"
-			return new WP_Error( 'parse', __( 'Model returned unparseable output; post left for the next run.', 'auto-ai-seo' ) );
+			return new WP_Error( 'parse', __( 'Model returned unparseable output; post left for the next run.', 'ilang-auto-ai-seo' ) );
 		}
 		$added = $this->store_suggestions( $post, $parsed, $targets );
 		update_post_meta( $post->ID, self::DONE_KEY, 'done:' . time() . ':' . $added );

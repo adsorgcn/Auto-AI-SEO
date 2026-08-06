@@ -70,13 +70,13 @@ class AASEO_Client {
 		) );
 
 		if ( ! AASEO_Options::is_configured() ) {
-			return new WP_Error( 'no_key', __( 'No API key configured.', 'auto-ai-seo' ) );
+			return new WP_Error( 'no_key', __( 'No API key configured.', 'ilang-auto-ai-seo' ) );
 		}
 
 		$models  = $args['models'] ? (array) $args['models'] : AASEO_Options::models( $args['kind'] );
 		$timeout = $args['timeout'] > 0 ? (int) $args['timeout'] : AASEO_Probe::timeout_for( $args['kind'] );
 		if ( ! $models ) {
-			return new WP_Error( 'no_models', __( 'No models configured.', 'auto-ai-seo' ) );
+			return new WP_Error( 'no_models', __( 'No models configured.', 'ilang-auto-ai-seo' ) );
 		}
 
 		$last = null;
@@ -111,7 +111,7 @@ class AASEO_Client {
 			AASEO_Probe::note_failure( $args['kind'], $model, $res->get_error_code() );
 			$last = $res;
 		}
-		return $last ? $last : new WP_Error( 'chain_failed', __( 'All models failed.', 'auto-ai-seo' ) );
+		return $last ? $last : new WP_Error( 'chain_failed', __( 'All models failed.', 'ilang-auto-ai-seo' ) );
 	}
 
 	const UNSUPPORTED_OPTION = 'aaseo_unsupported_params';
@@ -212,10 +212,10 @@ class AASEO_Client {
 			'completion_tokens' => isset( $json['usage']['completion_tokens'] ) ? (int) $json['usage']['completion_tokens'] : 0,
 		);
 		if ( '' === $text ) {
-			return new WP_Error( 'empty', __( 'Model returned no content.', 'auto-ai-seo' ), array( 'usage' => $spent ) );
+			return new WP_Error( 'empty', __( 'Model returned no content.', 'ilang-auto-ai-seo' ), array( 'usage' => $spent ) );
 		}
 		if ( isset( $choice['finish_reason'] ) && 'length' === $choice['finish_reason'] ) {
-			return new WP_Error( 'truncated', __( 'Output truncated by max_tokens.', 'auto-ai-seo' ), array( 'usage' => $spent ) );
+			return new WP_Error( 'truncated', __( 'Output truncated by max_tokens.', 'ilang-auto-ai-seo' ), array( 'usage' => $spent ) );
 		}
 
 		$usage = isset( $json['usage'] ) ? $json['usage'] : array();

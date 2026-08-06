@@ -1,45 +1,48 @@
 # Copyright (C) 2026 静水流深 (adsorgcn)
-# This file is distributed under the MIT.
+# This file is distributed under the GPL-3.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Auto-AI-SEO 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/auto-ai-seo\n"
+"Project-Id-Version: iLang Auto-AI-SEO 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/aaseo-pot\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-31T04:05:29+00:00\n"
+"POT-Creation-Date: 2026-08-06T02:02:08+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: auto-ai-seo\n"
+"X-Domain: ilang-auto-ai-seo\n"
 
 #. Plugin Name of the plugin
-#: auto-ai-seo.php
-#: admin/class-aaseo-admin.php:25
-#: admin/class-aaseo-admin.php:26
-#: admin/class-aaseo-admin.php:173
-msgid "Auto-AI-SEO"
+#: ilang-auto-ai-seo.php
+msgid "iLang Auto-AI-SEO"
 msgstr ""
 
 #. Plugin URI of the plugin
-#: auto-ai-seo.php
+#: ilang-auto-ai-seo.php
 msgid "https://github.com/adsorgcn/Auto-AI-SEO"
 msgstr ""
 
 #. Description of the plugin
-#: auto-ai-seo.php
+#: ilang-auto-ai-seo.php
 msgid "SEO that understands your content, not just matches it. AI-powered descriptions, image alt text, internal links and structured data for WordPress — in any language."
 msgstr ""
 
 #. Author of the plugin
-#: auto-ai-seo.php
+#: ilang-auto-ai-seo.php
 msgid "静水流深 (adsorgcn)"
 msgstr ""
 
 #. Author URI of the plugin
-#: auto-ai-seo.php
+#: ilang-auto-ai-seo.php
 msgid "https://github.com/adsorgcn"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:25
+#: admin/class-aaseo-admin.php:26
+#: admin/class-aaseo-admin.php:174
+msgid "Auto-AI-SEO"
 msgstr ""
 
 #: admin/class-aaseo-admin.php:35
@@ -48,418 +51,457 @@ msgid "Internal links"
 msgstr ""
 
 #: admin/class-aaseo-admin.php:52
-#: admin/class-aaseo-admin.php:125
-#: admin/class-aaseo-admin.php:159
-#: admin/class-aaseo-admin.php:452
-#: admin/class-aaseo-admin.php:479
-#: admin/class-aaseo-admin.php:528
+#: admin/class-aaseo-admin.php:126
+#: admin/class-aaseo-admin.php:160
+#: admin/class-aaseo-admin.php:475
+#: admin/class-aaseo-admin.php:502
+#: admin/class-aaseo-admin.php:551
 msgid "Insufficient permissions."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:176
+#: admin/class-aaseo-admin.php:177
 msgid "Settings saved."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:183
+#: admin/class-aaseo-admin.php:184
 msgid "Add an API key below to get started. Nothing runs until you do."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:187
+#: admin/class-aaseo-admin.php:188
 msgid "Tasks"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:190
+#: admin/class-aaseo-admin.php:191
 msgid "Usage today"
 msgstr ""
 
 #. translators: 1: calls, 2: tokens, 3: money
-#: admin/class-aaseo-admin.php:195
+#: admin/class-aaseo-admin.php:196
 #, php-format
 msgid "%1$s calls · %2$s tokens · %3$s"
 msgstr ""
 
 #. translators: 1: cap, 2: remaining
-#: admin/class-aaseo-admin.php:204
+#: admin/class-aaseo-admin.php:205
 #, php-format
 msgid "Daily cap %1$s tokens — %2$s remaining."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:212
+#: admin/class-aaseo-admin.php:213
 msgid "Environment"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:219
-#: admin/class-aaseo-admin.php:272
+#: admin/class-aaseo-admin.php:220
+#: admin/class-aaseo-admin.php:273
 msgid "Robots & indexing"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:222
+#: admin/class-aaseo-admin.php:223
 msgid "Broken links"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:225
+#: admin/class-aaseo-admin.php:226
+#: ilang-auto-ai-seo.php:73
 msgid "Settings"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:231
+#: admin/class-aaseo-admin.php:232
 msgid "API key"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:234
+#: admin/class-aaseo-admin.php:235
 msgid "Saved — leave blank to keep"
 msgstr ""
 
 #. translators: %s: signup link
-#: admin/class-aaseo-admin.php:239
+#: admin/class-aaseo-admin.php:240
 #, php-format
 msgid "Any OpenAI-compatible provider. No account yet? %s — signing up through that link grants bonus credits to both you and this project, and the free credits go a long way."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:240
+#: admin/class-aaseo-admin.php:241
 msgid "get a key from SiliconFlow"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:247
+#: admin/class-aaseo-admin.php:248
 msgid "API base URL"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:249
+#: admin/class-aaseo-admin.php:250
 msgid "HTTPS only."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:252
+#: admin/class-aaseo-admin.php:253
 msgid "Vision models"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:254
+#: admin/class-aaseo-admin.php:255
 msgid "One per line, in priority order. If one is unavailable the next is used automatically."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:257
+#: admin/class-aaseo-admin.php:258
 msgid "Text models"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:261
+#: admin/class-aaseo-admin.php:262
 msgid "Daily token cap"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:264
+#: admin/class-aaseo-admin.php:265
 msgid "Batches stop when the cap is hit and continue the next day. 0 = no cap."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:267
+#: admin/class-aaseo-admin.php:268
 msgid "Site context"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:268
+#: admin/class-aaseo-admin.php:269
 msgid "e.g. Tech review blog; recurring brands: xiaomi, dji, anker"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:269
+#: admin/class-aaseo-admin.php:270
 msgid "Describing your niche and recurring proper nouns noticeably improves accuracy."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:277
+#: admin/class-aaseo-admin.php:278
 msgid "Append rules to robots.txt"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:279
+#: admin/class-aaseo-admin.php:280
 msgid "Adds to what WordPress and other plugins output — never replaces it."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:283
+#: admin/class-aaseo-admin.php:284
 msgid "Send noindex headers on outbound redirects"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:285
+#: admin/class-aaseo-admin.php:286
 msgid "Keeps redirect endpoints (e.g. affiliate short links) out of search results while staying crawlable — blocking them in robots.txt would hide the noindex from crawlers and backfire."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:290
+#: admin/class-aaseo-admin.php:291
 msgid "Structured data & canonicals"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:295
+#: admin/class-aaseo-admin.php:296
 msgid "Output JSON-LD structured data"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:297
+#: admin/class-aaseo-admin.php:298
 msgid "Article, breadcrumb, site and organization markup. Turn off if another SEO plugin already provides it."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:301
+#: admin/class-aaseo-admin.php:302
 msgid "Add canonical tags on home and archive pages"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:303
+#: admin/class-aaseo-admin.php:304
 msgid "Only where themes commonly miss them — single posts are left to your theme, duplicate canonicals are worse than none."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:308
+#: admin/class-aaseo-admin.php:309
 msgid "Meta description tag"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:312
+#: admin/class-aaseo-admin.php:313
 msgid "Print the meta description tag"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:314
+#: admin/class-aaseo-admin.php:315
 msgid "Turn off if your theme or SEO plugin already prints one — descriptions are still written and stored either way, and the aaseo_description_meta_key filter can store them directly in your theme's own field."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:318
+#: admin/class-aaseo-admin.php:319
+msgid "Name pasted screenshots"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:323
+msgid "Give uploaded images a descriptive filename and alt text"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:325
+msgid "Off by default. While on, every image entering the media library — including sideloads and WP-CLI imports — is sent to your AI provider to be described. Images you named yourself are recognised and left alone."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:329
 msgid "Save settings"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:327
+#. translators: 1: link to the support forum, 2: link to open a GitHub issue
+#: admin/class-aaseo-admin.php:337
+#, php-format
+msgid "Something not working, or an idea for it? Ask on the %1$s, or %2$s — both are read by the author."
+msgstr ""
+
+#: admin/class-aaseo-admin.php:338
+msgid "support forum"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:339
+msgid "open an issue on GitHub"
+msgstr ""
+
+#: admin/class-aaseo-admin.php:350
 msgid "No task modules are active yet."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:331
+#: admin/class-aaseo-admin.php:354
 msgid "Task"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:331
+#: admin/class-aaseo-admin.php:354
 msgid "Pending"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:331
+#: admin/class-aaseo-admin.php:354
 msgid "Progress"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:331
+#: admin/class-aaseo-admin.php:354
 msgid "Status"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:331
+#: admin/class-aaseo-admin.php:354
 msgid "Actions"
 msgstr ""
 
 #. translators: %d: number of failed items
-#: admin/class-aaseo-admin.php:349
+#: admin/class-aaseo-admin.php:372
 #, php-format
 msgid "(%d failed)"
 msgstr ""
 
 #. translators: 1: count, 2: reason
-#: admin/class-aaseo-admin.php:361
+#: admin/class-aaseo-admin.php:384
 #, php-format
 msgid "%1$d skipped — %2$s"
 msgstr ""
 
 #. translators: 1: count, 2: reason
-#: admin/class-aaseo-admin.php:372
+#: admin/class-aaseo-admin.php:395
 #, php-format
 msgid "%1$d rewritten — %2$s"
 msgstr ""
 
 #. translators: %s: file path
-#: admin/class-aaseo-admin.php:403
+#: admin/class-aaseo-admin.php:426
 #, php-format
 msgid "A real robots.txt file exists at %s. The web server serves that file directly, so no WordPress rules (from this or any plugin) apply. Edit or remove the file yourself — this plugin will never touch it."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:410
+#: admin/class-aaseo-admin.php:433
 msgid "robots.txt rules"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:411
-#: admin/class-aaseo-admin.php:413
+#: admin/class-aaseo-admin.php:434
+#: admin/class-aaseo-admin.php:436
 msgid "on"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:411
-#: admin/class-aaseo-admin.php:413
+#: admin/class-aaseo-admin.php:434
+#: admin/class-aaseo-admin.php:436
 msgid "off"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:412
+#: admin/class-aaseo-admin.php:435
 msgid "noindex headers"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:415
+#: admin/class-aaseo-admin.php:438
 msgid "noindex paths"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:418
+#: admin/class-aaseo-admin.php:441
 msgid "Registered by other plugins via the aaseo_noindex_paths filter. These stay crawlable on purpose: crawlers must be able to fetch a URL to see its noindex."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:420
+#: admin/class-aaseo-admin.php:443
 msgid "none registered"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:425
+#: admin/class-aaseo-admin.php:448
 msgid "dropped rules"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:427
+#: admin/class-aaseo-admin.php:450
 msgid "These Disallow rules were refused: they overlap a noindex path, and blocking crawl there would hide the noindex from crawlers (or the 50-rule cap was hit)."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:431
+#: admin/class-aaseo-admin.php:454
 msgid "appended block"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:435
+#: admin/class-aaseo-admin.php:458
 msgid "nothing (module disabled or no rules)"
 msgstr ""
 
 #. translators: %s: robots.txt URL
-#: admin/class-aaseo-admin.php:439
+#: admin/class-aaseo-admin.php:462
 #, php-format
 msgid "Live file: %s"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:538
+#: admin/class-aaseo-admin.php:561
 #: includes/jobs/class-aaseo-job-ilink.php:26
 msgid "Internal link suggestions"
 msgstr ""
 
 #. translators: 1: succeeded, 2: skipped as stale, 3: failed
-#: admin/class-aaseo-admin.php:546
+#: admin/class-aaseo-admin.php:569
 #, php-format
 msgid "Bulk done: %1$d processed, %2$d skipped as stale (post changed / target gone / already linked), %3$d failed."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:558
+#: admin/class-aaseo-admin.php:581
 msgid "Nothing is ever applied automatically. Approving inserts the link at the first safe occurrence of the anchor; rejecting remembers the pair and never suggests it again."
 msgstr ""
 
 #. translators: 1: applied count, 2: rejected count
-#: admin/class-aaseo-admin.php:562
+#: admin/class-aaseo-admin.php:585
 #, php-format
 msgid "So far: %1$s applied, %2$s rejected."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:569
+#: admin/class-aaseo-admin.php:592
 msgid "No suggestions waiting. Run the “Internal link suggestions” task to generate more."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:578
+#: admin/class-aaseo-admin.php:601
 msgid "Select All"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:581
+#: admin/class-aaseo-admin.php:604
 msgid "In post"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:582
+#: admin/class-aaseo-admin.php:605
 msgid "Anchor in context"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:583
+#: admin/class-aaseo-admin.php:606
 msgid "Links to"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:584
+#: admin/class-aaseo-admin.php:607
 msgid "Score"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:585
-#: admin/class-aaseo-admin.php:670
+#: admin/class-aaseo-admin.php:608
+#: admin/class-aaseo-admin.php:693
 msgid "Why"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:586
+#: admin/class-aaseo-admin.php:609
 msgid "Decision"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:603
+#: admin/class-aaseo-admin.php:626
 msgid "Approve"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:603
+#: admin/class-aaseo-admin.php:626
 msgid "Reject"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:618
+#: admin/class-aaseo-admin.php:641
 msgid "Insert links for ALL selected suggestions?"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:619
+#: admin/class-aaseo-admin.php:642
 msgid "Approve selected"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:622
+#: admin/class-aaseo-admin.php:645
 msgid "Reject all selected? These pairs will never be suggested again."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:623
+#: admin/class-aaseo-admin.php:646
 msgid "Reject selected"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:625
+#: admin/class-aaseo-admin.php:648
 msgid "Same safeguards as one-by-one: changed posts are skipped as stale, never forced."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:665
+#: admin/class-aaseo-admin.php:688
 msgid "No confirmed broken links. Run the “Broken link check” task to scan."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:669
+#: admin/class-aaseo-admin.php:692
 msgid "Post"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:669
+#: admin/class-aaseo-admin.php:692
 msgid "Dead link"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:686
+#: admin/class-aaseo-admin.php:709
 msgid "Task started."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:687
+#: admin/class-aaseo-admin.php:710
 msgid "Task paused."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:688
+#: admin/class-aaseo-admin.php:711
 msgid "Task resumed."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:689
+#: admin/class-aaseo-admin.php:712
 msgid "Queued actions cancelled."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:690
+#: admin/class-aaseo-admin.php:713
 msgid "Link inserted into the post."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:691
+#: admin/class-aaseo-admin.php:714
 msgid "Suggestion rejected — this pair will never be suggested again."
 msgstr ""
 
-#: admin/class-aaseo-admin.php:699
+#: admin/class-aaseo-admin.php:722
 msgid "idle"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:700
+#: admin/class-aaseo-admin.php:723
 msgid "running"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:701
+#: admin/class-aaseo-admin.php:724
 msgid "paused"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:702
+#: admin/class-aaseo-admin.php:725
 msgid "done"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:709
+#: admin/class-aaseo-admin.php:732
 msgid "Pause"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:709
-#: admin/class-aaseo-admin.php:712
+#: admin/class-aaseo-admin.php:732
+#: admin/class-aaseo-admin.php:735
 msgid "Cancel"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:712
+#: admin/class-aaseo-admin.php:735
 msgid "Resume"
 msgstr ""
 
-#: admin/class-aaseo-admin.php:714
+#: admin/class-aaseo-admin.php:737
 msgid "Start"
+msgstr ""
+
+#: ilang-auto-ai-seo.php:73
+msgid "Set up"
+msgstr ""
+
+#: ilang-auto-ai-seo.php:90
+msgid "Support"
+msgstr ""
+
+#: ilang-auto-ai-seo.php:95
+msgid "Report an issue or suggest a feature"
 msgstr ""
 
 #: includes/class-aaseo-client.php:73

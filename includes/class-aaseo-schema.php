@@ -179,7 +179,7 @@ class AASEO_Schema {
 			return array();
 		}
 		$items   = array();
-		$items[] = self::crumb( 1, __( 'Home', 'auto-ai-seo' ), home_url( '/' ) );
+		$items[] = self::crumb( 1, __( 'Home', 'ilang-auto-ai-seo' ), home_url( '/' ) );
 		$cats    = get_the_category( $post->ID );
 		$pos     = 2;
 		if ( $cats && ! is_wp_error( $cats ) ) {
@@ -211,7 +211,7 @@ class AASEO_Schema {
 			'@context'        => 'https://schema.org',
 			'@type'           => 'BreadcrumbList',
 			'itemListElement' => array(
-				self::crumb( 1, __( 'Home', 'auto-ai-seo' ), home_url( '/' ) ),
+				self::crumb( 1, __( 'Home', 'ilang-auto-ai-seo' ), home_url( '/' ) ),
 				array(
 					'@type'    => 'ListItem',
 					'position' => 2,

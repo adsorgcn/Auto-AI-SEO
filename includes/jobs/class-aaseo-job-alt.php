@@ -19,11 +19,11 @@ class AASEO_Job_Alt extends AASEO_Job {
 	}
 
 	public function label() {
-		return __( 'Image alt text', 'auto-ai-seo' );
+		return __( 'Image alt text', 'ilang-auto-ai-seo' );
 	}
 
 	public function description() {
-		return __( 'Describe what each image actually shows, so every image gets its own alt text.', 'auto-ai-seo' );
+		return __( 'Describe what each image actually shows, so every image gets its own alt text.', 'ilang-auto-ai-seo' );
 	}
 
 	public function model_kind() {
@@ -158,7 +158,7 @@ class AASEO_Job_Alt extends AASEO_Job {
 		}
 
 		// 第三档:留空。不写烂 alt。
-		return new WP_Error( 'no_alt', __( 'Could not describe this image; left empty rather than guessing.', 'auto-ai-seo' ) );
+		return new WP_Error( 'no_alt', __( 'Could not describe this image; left empty rather than guessing.', 'ilang-auto-ai-seo' ) );
 	}
 
 	// ---------------------------------------------------------------- 提示词

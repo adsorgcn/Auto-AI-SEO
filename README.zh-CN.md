@@ -1,4 +1,4 @@
-# Auto-AI-SEO
+# iLang Auto-AI-SEO
 
 **读懂内容的 SEO——而不是匹配模式的 SEO。**
 

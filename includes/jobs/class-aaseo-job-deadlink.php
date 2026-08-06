@@ -29,11 +29,11 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 	}
 
 	public function label() {
-		return __( 'Broken link check', 'auto-ai-seo' );
+		return __( 'Broken link check', 'ilang-auto-ai-seo' );
 	}
 
 	public function description() {
-		return __( 'Check outbound links; only confidently dead ones are reported — ambiguous cases are judged by AI, bot-blocking is never mistaken for death.', 'auto-ai-seo' );
+		return __( 'Check outbound links; only confidently dead ones are reported — ambiguous cases are judged by AI, bot-blocking is never mistaken for death.', 'ilang-auto-ai-seo' );
 	}
 
 	public function model_kind() {
@@ -210,7 +210,7 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 			$msg = $res->get_error_message();
 			// 域名解析失败是确定性死亡;超时/连接抖动不是 —— 下个复查周期自然再验
 			if ( false !== stripos( $msg, 'resolve' ) || false !== stripos( $msg, 'getaddrinfo' ) ) {
-				return array( 'state' => 'dead', 'why' => __( 'domain no longer resolves', 'auto-ai-seo' ) );
+				return array( 'state' => 'dead', 'why' => __( 'domain no longer resolves', 'ilang-auto-ai-seo' ) );
 			}
 			return array( 'state' => 'alive', 'why' => 'transient: ' . $msg );
 		}
@@ -284,7 +284,7 @@ class AASEO_Job_Deadlink extends AASEO_Job {
 				'state' => 'dead',
 				'why'   => sprintf(
 					/* translators: %s: final URL */
-					__( 'AI-judged dead — now lands on %s', 'auto-ai-seo' ),
+					__( 'AI-judged dead — now lands on %s', 'ilang-auto-ai-seo' ),
 					$final
 				),
 			);

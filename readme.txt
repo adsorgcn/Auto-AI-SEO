@@ -1,10 +1,10 @@
-=== Auto-AI-SEO ===
+=== iLang Auto-AI-SEO ===
 Contributors: eastsoft
 Tags: seo, ai, alt text, structured data, internal links
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ SEO that understands your content instead of matching patterns: AI-written descr
 
 Google's own documentation says a good page description "summarizes the whole page", that link text should be descriptive enough to make sense on its own, and that content should leave a reader feeling they achieved their goal. None of those can be satisfied by pattern matching — they all require understanding the page.
 
-Auto-AI-SEO reads your content and does the work:
+iLang Auto-AI-SEO reads your content and does the work:
 
 * **Page descriptions** written after reading the whole post, not cut from the first 160 characters. Posts that already have a good description are left alone.
 * **Image alt text** based on what each image actually shows, so every image gets its own description instead of the post title repeated.
@@ -51,7 +51,7 @@ This plugin bundles the Action Scheduler library (https://actionscheduler.org, G
 
 == License ==
 
-Auto-AI-SEO is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+iLang Auto-AI-SEO is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 Bundled third-party code:
 
@@ -63,7 +63,7 @@ The original code in this plugin (everything outside libraries/) is Copyright (c
 == Installation ==
 
 1. Upload the plugin and activate it.
-2. Go to Auto-AI-SEO and enter your API key.
+2. Open the plugin from the Settings link in your plugins list, and enter your API key.
 3. Pick a task and start it. Nothing runs on its own.
 
 == Frequently Asked Questions ==
@@ -89,6 +89,13 @@ Yes, at either level. On the settings screen you can turn off the plugin's own d
 No. The internal-link review screen has select-all with bulk approve and bulk reject; every applied link stays individually revertible.
 
 == Changelog ==
+
+= 1.1.0 =
+* Settings link now appears directly in the plugin list, so setup is one click from where you activate.
+* Support and feedback links added to the plugin row and the settings screen; the issue link comes pre-filled with your plugin, WordPress and PHP versions.
+* Licensing corrected to GPLv3-or-later, matching the bundled Action Scheduler library.
+* Screenshot naming is now off by default and has its own switch — no image leaves your site unless you ask for it.
+* Structured data, archive canonicals and the meta description tag each got their own switch on the settings screen.
 
 = 1.0.0 =
 * Image alt text: vision-based description of what each image actually shows, written in the site language, validated and repaired rather than discarded.

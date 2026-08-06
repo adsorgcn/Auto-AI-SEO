@@ -102,7 +102,7 @@ class AASEO_Links {
 			$id
 		) );
 		if ( 1 !== (int) $claimed ) {
-			return new WP_Error( 'gone', __( 'Suggestion no longer pending.', 'auto-ai-seo' ) );
+			return new WP_Error( 'gone', __( 'Suggestion no longer pending.', 'ilang-auto-ai-seo' ) );
 		}
 		$row  = self::get( $id );
 		$post = $row ? get_post( (int) $row->source_id ) : null;
@@ -112,19 +112,19 @@ class AASEO_Links {
 		if ( ! $post || 'publish' !== $post->post_status || ! $url
 			|| 'publish' !== get_post_status( (int) $row->target_id ) ) {
 			self::set_status( $id, 'stale' );
-			return new WP_Error( 'stale', __( 'Source or target post is gone; suggestion marked stale.', 'auto-ai-seo' ) );
+			return new WP_Error( 'stale', __( 'Source or target post is gone; suggestion marked stale.', 'ilang-auto-ai-seo' ) );
 		}
 		// 建议入队后正文可能被人手动加过同目标的链接 —— 同一目标一篇只链一次
 		if ( self::already_links( $post->post_content, (int) $row->target_id ) ) {
 			self::set_status( $id, 'stale' );
-			return new WP_Error( 'dupe', __( 'Post already links to this target; suggestion marked stale.', 'auto-ai-seo' ) );
+			return new WP_Error( 'dupe', __( 'Post already links to this target; suggestion marked stale.', 'ilang-auto-ai-seo' ) );
 		}
 
 		$new = self::apply_to_content( $post->post_content, (string) $row->anchor, $url );
 		if ( '' === $new ) {
 			// 正文已被编辑,锚文本找不到安全落点 —— 标 stale,不硬塞
 			self::set_status( $id, 'stale' );
-			return new WP_Error( 'no_anchor', __( 'Anchor text no longer found in the post (content changed?); suggestion marked stale.', 'auto-ai-seo' ) );
+			return new WP_Error( 'no_anchor', __( 'Anchor text no longer found in the post (content changed?); suggestion marked stale.', 'ilang-auto-ai-seo' ) );
 		}
 
 		/*
@@ -138,7 +138,7 @@ class AASEO_Links {
 			$expected = self::apply_to_content( wp_kses_post( $post->post_content ), (string) $row->anchor, $url );
 			if ( '' === $expected || $would_be !== $expected ) {
 				self::set_status( $id, 'pending' ); // 退回待审,让有权限的人来批
-				return new WP_Error( 'kses', __( 'This post contains markup (e.g. iframes) that your account cannot re-save; approving would strip it. Ask an administrator with unfiltered_html to approve this one.', 'auto-ai-seo' ) );
+				return new WP_Error( 'kses', __( 'This post contains markup (e.g. iframes) that your account cannot re-save; approving would strip it. Ask an administrator with unfiltered_html to approve this one.', 'ilang-auto-ai-seo' ) );
 			}
 		}
 
@@ -155,7 +155,7 @@ class AASEO_Links {
 	public static function reject( $id ) {
 		$row = self::get( $id );
 		if ( ! $row || 'pending' !== $row->status ) {
-			return new WP_Error( 'gone', __( 'Suggestion no longer pending.', 'auto-ai-seo' ) );
+			return new WP_Error( 'gone', __( 'Suggestion no longer pending.', 'ilang-auto-ai-seo' ) );
 		}
 		self::set_status( $id, 'rejected' ); // 拒过的 pair 永不再提(pair_exists 含全部状态)
 		return true;

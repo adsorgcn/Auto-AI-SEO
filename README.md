@@ -1,4 +1,4 @@
-# Auto-AI-SEO
+# iLang Auto-AI-SEO
 
 **SEO that understands your content — not just matches it.**
 

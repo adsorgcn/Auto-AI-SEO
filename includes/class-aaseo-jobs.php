@@ -78,13 +78,13 @@ class AASEO_Jobs {
 		$job = $this->get( $slug );
 		if ( ! $job ) {
 			/* translators: %s: job slug */
-			return new WP_Error( 'no_job', sprintf( __( 'Unknown job: %s', 'auto-ai-seo' ), $slug ) );
+			return new WP_Error( 'no_job', sprintf( __( 'Unknown job: %s', 'ilang-auto-ai-seo' ), $slug ) );
 		}
 		if ( ! $job->is_ready() ) {
-			return new WP_Error( 'not_ready', __( 'Job is not ready to run (API key missing?)', 'auto-ai-seo' ) );
+			return new WP_Error( 'not_ready', __( 'Job is not ready to run (API key missing?)', 'ilang-auto-ai-seo' ) );
 		}
 		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
-			return new WP_Error( 'no_scheduler', __( 'Action Scheduler unavailable.', 'auto-ai-seo' ) );
+			return new WP_Error( 'no_scheduler', __( 'Action Scheduler unavailable.', 'ilang-auto-ai-seo' ) );
 		}
 
 		$total = (int) $job->count_candidates();
@@ -248,7 +248,7 @@ class AASEO_Jobs {
 			// 每日额度用尽 → 推到明天再跑,不消耗重试次数
 			$this->requeue_later( $job, $object_id, $this->seconds_until_tomorrow(), 'daily cap reached' );
 			$this->set_state( $slug, array_merge( $state, array(
-				'note' => __( 'Daily token cap reached; will continue tomorrow.', 'auto-ai-seo' ),
+				'note' => __( 'Daily token cap reached; will continue tomorrow.', 'ilang-auto-ai-seo' ),
 			) ) );
 			return;
 		}
@@ -400,25 +400,25 @@ class AASEO_Jobs {
 	/** 跳过原因的人话解释 */
 	public static function skip_explanations() {
 		return array(
-			'missing_file' => __( 'image file no longer exists on disk (orphaned attachment record — safe to clean up)', 'auto-ai-seo' ),
-			'decorative'   => __( 'too small to be meaningful content (logo/icon — alt is intentionally left empty)', 'auto-ai-seo' ),
-			'has_value'    => __( 'already written by a human — left untouched', 'auto-ai-seo' ),
-			'desc_ok'      => __( 'existing description already does its job (AI-judged) — left untouched', 'auto-ai-seo' ),
-			'no_content'   => __( 'post has no content to describe', 'auto-ai-seo' ),
-			'gone'         => __( 'post no longer exists or is not published', 'auto-ai-seo' ),
-			'thin'         => __( 'too few posts to be worth describing (threshold configurable)', 'auto-ai-seo' ),
-			'no_targets'   => __( 'no related posts share a category or tag — nothing worth linking to', 'auto-ai-seo' ),
-			'no_links'     => __( 'reviewed — no link scored high enough to suggest (that is a pass, not a failure)', 'auto-ai-seo' ),
-			'no_links_out' => __( 'no outbound links to check', 'auto-ai-seo' ),
-			'links_ok'     => __( 'all outbound links respond — nothing to report', 'auto-ai-seo' ),
+			'missing_file' => __( 'image file no longer exists on disk (orphaned attachment record — safe to clean up)', 'ilang-auto-ai-seo' ),
+			'decorative'   => __( 'too small to be meaningful content (logo/icon — alt is intentionally left empty)', 'ilang-auto-ai-seo' ),
+			'has_value'    => __( 'already written by a human — left untouched', 'ilang-auto-ai-seo' ),
+			'desc_ok'      => __( 'existing description already does its job (AI-judged) — left untouched', 'ilang-auto-ai-seo' ),
+			'no_content'   => __( 'post has no content to describe', 'ilang-auto-ai-seo' ),
+			'gone'         => __( 'post no longer exists or is not published', 'ilang-auto-ai-seo' ),
+			'thin'         => __( 'too few posts to be worth describing (threshold configurable)', 'ilang-auto-ai-seo' ),
+			'no_targets'   => __( 'no related posts share a category or tag — nothing worth linking to', 'ilang-auto-ai-seo' ),
+			'no_links'     => __( 'reviewed — no link scored high enough to suggest (that is a pass, not a failure)', 'ilang-auto-ai-seo' ),
+			'no_links_out' => __( 'no outbound links to check', 'ilang-auto-ai-seo' ),
+			'links_ok'     => __( 'all outbound links respond — nothing to report', 'ilang-auto-ai-seo' ),
 		);
 	}
 
 	/** 修补原因的人话解释 */
 	public static function repair_explanations() {
 		return array(
-			'length'   => __( 'first draft ran too long and was rewritten to fit', 'auto-ai-seo' ),
-			'language' => __( "first draft came back in the wrong language and was rewritten in the site's language", 'auto-ai-seo' ),
+			'length'   => __( 'first draft ran too long and was rewritten to fit', 'ilang-auto-ai-seo' ),
+			'language' => __( "first draft came back in the wrong language and was rewritten in the site's language", 'ilang-auto-ai-seo' ),
 		);
 	}
 

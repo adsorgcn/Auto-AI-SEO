@@ -183,34 +183,34 @@ class AASEO_Probe {
 		$out   = array();
 
 		$paths = array(
-			'cli'       => __( 'WP-CLI available — batches run with no web timeout. Strongest path.', 'auto-ai-seo' ),
-			'scheduler' => __( 'Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch.', 'auto-ai-seo' ),
-			'limited'   => __( 'Limited environment — processing a couple of items per request. Consider running via WP-CLI.', 'auto-ai-seo' ),
+			'cli'       => __( 'WP-CLI available — batches run with no web timeout. Strongest path.', 'ilang-auto-ai-seo' ),
+			'scheduler' => __( 'Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch.', 'ilang-auto-ai-seo' ),
+			'limited'   => __( 'Limited environment — processing a couple of items per request. Consider running via WP-CLI.', 'ilang-auto-ai-seo' ),
 		);
 		$out[] = $paths[ $path ];
 
 		if ( 0 === $s['max_execution_time'] ) {
-			$out[] = __( 'PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value.', 'auto-ai-seo' );
+			$out[] = __( 'PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value.', 'ilang-auto-ai-seo' );
 		}
 		if ( $calib ) {
 			$out[] = sprintf(
 				/* translators: 1: sample count, 2: median seconds, 3: timeout seconds */
-				__( 'Measured on this site: %1$d samples, median %2$ss per item — per-call timeout set to %3$ss.', 'auto-ai-seo' ),
+				__( 'Measured on this site: %1$d samples, median %2$ss per item — per-call timeout set to %3$ss.', 'ilang-auto-ai-seo' ),
 				$calib['n'], $calib['median'], self::timeout_for( $kind )
 			);
 		} else {
-			$out[] = __( 'No measurements yet — conservative defaults in use. They tighten automatically once a batch has run.', 'auto-ai-seo' );
+			$out[] = __( 'No measurements yet — conservative defaults in use. They tighten automatically once a batch has run.', 'ilang-auto-ai-seo' );
 		}
 		$hf = self::health_factor( $kind );
 		if ( $hf < 1.0 ) {
 			$out[] = sprintf(
 				/* translators: %s: percentage */
-				__( 'Recent failures detected — throughput reduced to %s%% until things recover.', 'auto-ai-seo' ),
+				__( 'Recent failures detected — throughput reduced to %s%% until things recover.', 'ilang-auto-ai-seo' ),
 				(int) ( $hf * 100 )
 			);
 		}
 		if ( ! empty( $s['photon'] ) ) {
-			$out[] = __( 'Jetpack image CDN detected — images are resized on the CDN, saving local processing.', 'auto-ai-seo' );
+			$out[] = __( 'Jetpack image CDN detected — images are resized on the CDN, saving local processing.', 'ilang-auto-ai-seo' );
 		}
 		return $out;
 	}

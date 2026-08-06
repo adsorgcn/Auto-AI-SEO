@@ -23,7 +23,7 @@ class AASEO_Image {
 		$attachment_id = (int) $attachment_id;
 		$mime          = get_post_mime_type( $attachment_id );
 		if ( ! $mime || 0 !== strpos( $mime, 'image/' ) ) {
-			return new WP_Error( 'not_image', __( 'Not an image attachment.', 'auto-ai-seo' ) );
+			return new WP_Error( 'not_image', __( 'Not an image attachment.', 'ilang-auto-ai-seo' ) );
 		}
 
 		$raw = self::via_cdn( $attachment_id );
@@ -74,7 +74,7 @@ class AASEO_Image {
 	private static function via_gd( $attachment_id ) {
 		$file = get_attached_file( $attachment_id );
 		if ( ! $file || ! file_exists( $file ) ) {
-			return new WP_Error( 'no_file', __( 'Image file not found locally.', 'auto-ai-seo' ) );
+			return new WP_Error( 'no_file', __( 'Image file not found locally.', 'ilang-auto-ai-seo' ) );
 		}
 		$editor = wp_get_image_editor( $file );
 		if ( is_wp_error( $editor ) ) {

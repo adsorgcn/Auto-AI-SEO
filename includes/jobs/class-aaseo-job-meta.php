@@ -23,11 +23,11 @@ class AASEO_Job_Meta extends AASEO_Job {
 	}
 
 	public function label() {
-		return __( 'Meta descriptions', 'auto-ai-seo' );
+		return __( 'Meta descriptions', 'ilang-auto-ai-seo' );
 	}
 
 	public function description() {
-		return __( 'Judge each post’s search description; rewrite only the ones that fail — from an understanding of the whole article, not a truncation.', 'auto-ai-seo' );
+		return __( 'Judge each post’s search description; rewrite only the ones that fail — from an understanding of the whole article, not a truncation.', 'ilang-auto-ai-seo' );
 	}
 
 	public function model_kind() {
@@ -160,7 +160,7 @@ class AASEO_Job_Meta extends AASEO_Job {
 		}
 		$desc = $this->validate( AASEO_Client::clean( $res['text'] ), $title );
 		if ( '' === $desc ) {
-			return new WP_Error( 'bad_output', __( 'Generated description failed validation; post left for the next run.', 'auto-ai-seo' ) );
+			return new WP_Error( 'bad_output', __( 'Generated description failed validation; post left for the next run.', 'ilang-auto-ai-seo' ) );
 		}
 
 		AASEO_Meta::save( $post->ID, $desc, 'written' );
