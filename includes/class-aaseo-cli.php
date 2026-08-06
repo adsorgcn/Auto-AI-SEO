@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
  * WP-CLI 命令 —— 最强执行路径(无 web 超时)。
  *
  * 刻意与后台 UI 共用同一套 Job 实现,不写第二份逻辑:
- * 后台按钮走 Action Scheduler 队列,CLI 直接同步循环,处理函数是同一个 handle_one()。
+ * 后台按钮走后台队列(AASEO_Queue),CLI 直接同步循环,处理函数是同一个 handle_one()。
  * 遍历借鉴官方 wp media regenerate 的做法:每 N 条清一次对象缓存,防长跑内存膨胀。
  */
 class AASEO_CLI {
@@ -69,7 +69,9 @@ class AASEO_CLI {
 		WP_CLI::log( 'Image          : GD ' . ( $s['gd'] ? 'yes' : 'no' )
 			. ' | Imagick ' . ( $s['imagick'] ? 'yes' : 'no' )
 			. ' | Photon ' . ( $s['photon'] ? 'yes' : 'no' ) );
-		WP_CLI::log( 'Scheduler      : ' . ( $s['action_scheduler'] ? 'available' : 'MISSING' ) );
+		WP_CLI::log( 'Queue driver   : ' . ( 'as' === AASEO_Queue::driver()
+			? 'action-scheduler (provided by another plugin)'
+			: 'wp-cron (built in; slower, driven by site traffic)' ) );
 		foreach ( array( 'text', 'vision' ) as $kind ) {
 			$c = AASEO_Probe::calibration( $kind );
 			WP_CLI::log( sprintf(
@@ -101,7 +103,7 @@ class AASEO_CLI {
 	 * : 只列出将要处理的对象,不实际调用 AI
 	 *
 	 * [--queue]
-	 * : 交给 Action Scheduler 后台跑,而不是在本进程同步跑
+	 * : 交给后台队列跑,而不是在本进程同步跑
 	 *
 	 * [--yes]
 	 * : 跳过成本确认

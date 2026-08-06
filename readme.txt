@@ -4,9 +4,9 @@ Tags: seo, ai, alt text, structured data, internal links
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
-License: GPLv3 or later
-License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Stable tag: 1.2.0
+License: MIT
+License URI: https://opensource.org/license/mit
 
 SEO that understands your content instead of matching patterns: AI-written descriptions, image alt text and internal links, in any language.
 
@@ -47,18 +47,17 @@ SiliconFlow privacy policy: https://docs.siliconflow.cn/en/legals/privacy-policy
 
 The author's SiliconFlow referral link appears on the settings screen. Signing up through it grants bonus credits to both the new user and the author. Using it is optional; a key from any compatible provider works identically.
 
-This plugin bundles the Action Scheduler library (https://actionscheduler.org, GPLv3) for background processing.
+= Background processing =
+
+Batches run in the background so a web timeout cannot stop them. If any plugin on your site provides the Action Scheduler library (WooCommerce and many others do), this plugin uses it automatically. If not, WordPress' own cron is used instead — the same work gets done, but it advances a few items at a time and depends on visits to your site, so a quiet site takes longer. The settings screen tells you which one is in use. WP-CLI runs the same work at full speed on either.
+
+No queue library is bundled with this plugin.
 
 == License ==
 
-iLang Auto-AI-SEO is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+iLang Auto-AI-SEO is Copyright (c) 2026 静水流深 and is released under the MIT License. See the LICENSE file for the full text.
 
-Bundled third-party code:
-
-* Action Scheduler — Copyright (c) Automattic, Inc. — GPLv3 or later — https://actionscheduler.org
-* mtdowling/cron-expression (inside Action Scheduler) — Copyright (c) 2011 Michael Dowling — MIT
-
-The original code in this plugin (everything outside libraries/) is Copyright (c) 2026 静水流深 and is additionally available under the MIT License; see LICENSE-MIT.txt. The distributed package as a whole is GPL-3.0-or-later, because it bundles Action Scheduler.
+No third-party code is bundled.
 
 == Installation ==
 
@@ -76,6 +75,10 @@ Page descriptions and image alt text are written for you and can be reverted. In
 
 The plugin detects what your server can actually do and sizes its batches accordingly, rather than trusting reported PHP limits. Work continues across requests, so a web timeout cannot stop a batch. WP-CLI is supported for the fastest path.
 
+= The settings screen says batches run on WordPress cron. Is that a problem? =
+
+No, but it is slower. WordPress cron only advances when someone visits your site, so on a quiet site a large batch can take hours. Nothing is lost along the way: the plugin works from a list of what still needs doing, so anything that did not get processed is still on that list and gets picked up when you start the task again (or run it with WP-CLI). Two ways to speed it up: run the task with WP-CLI (`wp aaseo run <job>`), or install any plugin that provides Action Scheduler — this plugin will pick it up automatically, no configuration.
+
 = Can I use a provider other than the default? =
 
 Yes. Any OpenAI-compatible endpoint works. Only HTTPS endpoints are accepted.
@@ -90,10 +93,19 @@ No. The internal-link review screen has select-all with bulk approve and bulk re
 
 == Changelog ==
 
+= 1.2.0 =
+* The Action Scheduler library is no longer bundled. If your site already has it — from WooCommerce or any other plugin — it is detected and used exactly as before. If not, WordPress' own cron drives the queue instead: slower on a quiet site, but nothing is lost or processed twice.
+* Because of that, the plugin is now MIT-licensed rather than GPLv3, and the download is a fraction of its former size.
+* The settings screen now names the queue it is actually using and says plainly what that means for speed, including when WP-Cron is switched off on the server.
+* Cancelling a task, and deactivating the plugin, now clear the queue on both paths. And if a leftover item is triggered anyway — the queue a site was using at the time is not always the one running when it fires — it is stopped before it can call the AI, so a cancelled task cannot quietly start spending again.
+* Upgrading from 1.1.0 no longer leaves work behind in the Action Scheduler tables. Anything queued by the bundled copy is cleared the moment a scheduler is available again, so it cannot wake up and re-run months later.
+* A task that cannot be queued at all now says so — including the reason WordPress gave — instead of showing a progress bar that never moves.
+* When an item fails, the reason is shown next to the task instead of only a count of failures.
+
 = 1.1.0 =
 * Settings link now appears directly in the plugin list, so setup is one click from where you activate.
 * Support and feedback links added to the plugin row and the settings screen; the issue link comes pre-filled with your plugin, WordPress and PHP versions.
-* Licensing corrected to GPLv3-or-later, matching the bundled Action Scheduler library.
+* Licensing corrected to GPLv3-or-later, matching the Action Scheduler library bundled at the time. (Superseded in 1.2.0, which drops the bundle and returns to MIT.)
 * Screenshot naming is now off by default and has its own switch — no image leaves your site unless you ask for it.
 * Structured data, archive canonicals and the meta description tag each got their own switch on the settings screen.
 

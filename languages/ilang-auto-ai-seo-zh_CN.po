@@ -1,21 +1,14 @@
 # Copyright (C) 2026 静水流深 (adsorgcn)
-# This file is distributed under the GPL-3.0-or-later.
+# This file is distributed under the MIT License.
 msgid ""
 msgstr ""
-"Project-Id-Version: iLang Auto-AI-SEO 1.1.0
-"
-"Language: zh_CN
-"
-"MIME-Version: 1.0
-"
-"Content-Type: text/plain; charset=UTF-8
-"
-"Content-Transfer-Encoding: 8bit
-"
-"Plural-Forms: nplurals=1; plural=0;
-"
-"X-Domain: ilang-auto-ai-seo
-"
+"Project-Id-Version: iLang Auto-AI-SEO 1.2.0\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Domain: ilang-auto-ai-seo\n"
 
 #. Plugin Name of the plugin
 #: ilang-auto-ai-seo.php
@@ -286,6 +279,12 @@ msgstr "%1$d 个跳过——%2$s"
 msgid "%1$d rewritten — %2$s"
 msgstr "%1$d 个重写——%2$s"
 
+#. translators: %s: error message from the most recent failed item
+#: admin/class-aaseo-admin.php:409
+#, php-format
+msgid "Last error — %s"
+msgstr "最近一次失败——%s"
+
 #. translators: %s: file path
 #: admin/class-aaseo-admin.php:426
 #, php-format
@@ -545,9 +544,9 @@ msgstr "未知任务:%s"
 msgid "Job is not ready to run (API key missing?)"
 msgstr "任务尚不可运行(是否缺少 API 密钥?)"
 
-#: includes/class-aaseo-jobs.php:87
-msgid "Action Scheduler unavailable."
-msgstr "Action Scheduler 不可用。"
+#: includes/class-aaseo-jobs.php:132
+msgid "Could not add the task to the background queue."
+msgstr "无法把该任务加入后台队列。"
 
 #: includes/class-aaseo-jobs.php:251
 msgid "Daily token cap reached; will continue tomorrow."
@@ -634,9 +633,17 @@ msgstr "WP-CLI 可用——批次不受 Web 超时限制,这是最强路径。"
 msgid "Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch."
 msgstr "通过 Action Scheduler 运行:任务经回环请求跨请求接力,单次 Web 超时无法中断批次。"
 
-#: includes/class-aaseo-probe.php:188
-msgid "Limited environment — processing a couple of items per request. Consider running via WP-CLI."
-msgstr "受限环境——每个请求只处理少量条目。建议改用 WP-CLI 运行。"
+#: includes/class-aaseo-probe.php:201
+msgid "Running through WordPress' own cron. This plugin no longer bundles a queue library; if any plugin on this site provides Action Scheduler (WooCommerce, for example), it is used automatically instead."
+msgstr "通过 WordPress 自带的 cron 运行。本插件不再打包队列库;站上只要有任何插件提供 Action Scheduler(例如 WooCommerce),就会自动改用它。"
+
+#: includes/class-aaseo-probe.php:211
+msgid "WordPress cron is driven by visits to your site, so batches advance a few items at a time and a quiet site advances slowly. Nothing is lost — a batch picks up where it left off. WP-CLI runs the same work at full speed."
+msgstr "WordPress cron 由站点访问触发,因此每次只推进几条,访问量低的站会比较慢。活不会丢 —— 批次会从上次停下的地方接着跑。用 WP-CLI 跑同样的任务则是全速。"
+
+#: includes/class-aaseo-probe.php:204
+msgid "WP-Cron is switched off on this site (DISABLE_WP_CRON). Background batches only advance when your server cron calls wp-cron.php — if no server cron is set up, they will not run at all. Use WP-CLI instead."
+msgstr "本站已关闭 WP-Cron(DISABLE_WP_CRON)。后台批次只在服务器 crontab 调用 wp-cron.php 时才推进 —— 若没有配置服务器 crontab,它们根本不会运行。请改用 WP-CLI。"
 
 #: includes/class-aaseo-probe.php:193
 msgid "PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value."

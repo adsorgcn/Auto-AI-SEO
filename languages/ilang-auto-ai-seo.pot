@@ -1,8 +1,8 @@
 # Copyright (C) 2026 静水流深 (adsorgcn)
-# This file is distributed under the GPL-3.0-or-later.
+# This file is distributed under the MIT License.
 msgid ""
 msgstr ""
-"Project-Id-Version: iLang Auto-AI-SEO 1.1.0\n"
+"Project-Id-Version: iLang Auto-AI-SEO 1.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/aaseo-pot\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -283,6 +283,12 @@ msgstr ""
 msgid "%1$d rewritten — %2$s"
 msgstr ""
 
+#. translators: %s: error message from the most recent failed item
+#: admin/class-aaseo-admin.php:409
+#, php-format
+msgid "Last error — %s"
+msgstr ""
+
 #. translators: %s: file path
 #: admin/class-aaseo-admin.php:426
 #, php-format
@@ -542,8 +548,8 @@ msgstr ""
 msgid "Job is not ready to run (API key missing?)"
 msgstr ""
 
-#: includes/class-aaseo-jobs.php:87
-msgid "Action Scheduler unavailable."
+#: includes/class-aaseo-jobs.php:132
+msgid "Could not add the task to the background queue."
 msgstr ""
 
 #: includes/class-aaseo-jobs.php:251
@@ -631,8 +637,16 @@ msgstr ""
 msgid "Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch."
 msgstr ""
 
-#: includes/class-aaseo-probe.php:188
-msgid "Limited environment — processing a couple of items per request. Consider running via WP-CLI."
+#: includes/class-aaseo-probe.php:201
+msgid "Running through WordPress' own cron. This plugin no longer bundles a queue library; if any plugin on this site provides Action Scheduler (WooCommerce, for example), it is used automatically instead."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:211
+msgid "WordPress cron is driven by visits to your site, so batches advance a few items at a time and a quiet site advances slowly. Nothing is lost — a batch picks up where it left off. WP-CLI runs the same work at full speed."
+msgstr ""
+
+#: includes/class-aaseo-probe.php:204
+msgid "WP-Cron is switched off on this site (DISABLE_WP_CRON). Background batches only advance when your server cron calls wp-cron.php — if no server cron is set up, they will not run at all. Use WP-CLI instead."
 msgstr ""
 
 #: includes/class-aaseo-probe.php:193

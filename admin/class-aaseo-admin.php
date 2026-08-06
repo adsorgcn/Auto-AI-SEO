@@ -398,6 +398,18 @@ class AASEO_Admin {
 					) ) . '</span>';
 				}
 			}
+			/*
+			 * 失败原因必须露出来。AS 路径上失败会抛异常,有"工具→Scheduled Actions"的日志兜着;
+			 * cron 路径按设计**不抛**(抛了就是 fatal 掉整个 cron 请求),原因只写进运行态 ——
+			 * 这里不渲染的话,最需要解释的那条路径上用户就只看得到一个红色的"(18 failed)"。
+			 */
+			if ( ! empty( $s['last_error'] ) ) {
+				echo '<p class="description">' . esc_html( sprintf(
+					/* translators: %s: error message from the most recent failed item */
+					__( 'Last error — %s', 'ilang-auto-ai-seo' ),
+					$s['last_error']
+				) ) . '</p>';
+			}
 			echo '</td><td>';
 			foreach ( self::actions_for( $status ) as $do => $label ) {
 				$url = wp_nonce_url(

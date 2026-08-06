@@ -27,6 +27,22 @@ class AASEO_Probe {
 		if ( ! $refresh ) {
 			$cached = get_option( self::STATIC_OPTION );
 			if ( is_array( $cached ) && isset( $cached['at'] ) ) {
+				/*
+				 * 这四格**必须每次现算**,不能吃缓存 —— 它们全是零成本的判断,却全都会变,
+				 * 而这个 option 写一次就永不过期:
+				 *   · queue_driver:装上或停用任何提供 Action Scheduler 的插件(WooCommerce
+				 *     最常见)就变了,吃缓存会让环境面板长期显示一个早就不成立的结论;
+				 *   · wp_cron_disabled:explain() 正是靠它决定要不要打印"关了 WP-Cron 又没配
+				 *     服务器 crontab 就根本不会跑"那句唯一的告警。站点是**后来**才在
+				 *     wp-config.php 里 define 常量的话,吃缓存就等于这句告警永远不出现;
+				 *   · alternate_wp_cron / is_cli:同理,缓存往往是在一次网页请求里写下的,
+				 *     拿它回答"现在是不是跑在 CLI 里"必错。
+				 * 顺带把 1.1.0 及更早版本缓存里没有 queue_driver 这一格的情况一起补上。
+				 */
+				$cached['queue_driver']      = AASEO_Queue::driver();
+				$cached['wp_cron_disabled']  = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+				$cached['alternate_wp_cron'] = defined( 'ALTERNATE_WP_CRON' ) && ALTERNATE_WP_CRON;
+				$cached['is_cli']            = defined( 'WP_CLI' ) && WP_CLI;
 				return $cached;
 			}
 		}
@@ -42,7 +58,8 @@ class AASEO_Probe {
 			'wp_cron_disabled'    => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
 			'alternate_wp_cron'   => defined( 'ALTERNATE_WP_CRON' ) && ALTERNATE_WP_CRON,
 			'is_cli'              => defined( 'WP_CLI' ) && WP_CLI,
-			'action_scheduler'    => function_exists( 'as_enqueue_async_action' ),
+			// 实际在用的队列驱动:'as' = 站上有别的插件提供 Action Scheduler;'cron' = WP 自带
+			'queue_driver'        => AASEO_Queue::driver(),
 			// Jetpack 的 Photon 可在 CDN 端缩放图片 → 免掉本地图像处理,是免费红利
 			'photon'              => class_exists( 'Jetpack' ) && function_exists( 'jetpack_photon_url' ),
 		);
@@ -50,16 +67,18 @@ class AASEO_Probe {
 		return $data;
 	}
 
-	/** 执行路径:CLI 最强 → AS(cron/loopback) → 受限(前台 nibble) */
+	/**
+	 * 执行路径:CLI 最强 → Action Scheduler(回环接力)→ WP-Cron(靠访问触发)。
+	 *
+	 * 两项都现算,不吃 static_probe 的缓存:is_cli 缓存下来会把"缓存是在网页请求里写的、
+	 * 现在跑在 CLI 里"这种最常见的情形一路报错;驱动更是随时会变。这两个都是零成本的判断,
+	 * 没有任何缓存的理由。
+	 */
 	public static function execution_path() {
-		$s = self::static_probe();
-		if ( ! empty( $s['is_cli'] ) ) {
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			return 'cli';
 		}
-		if ( ! empty( $s['action_scheduler'] ) ) {
-			return 'scheduler';
-		}
-		return 'limited';
+		return 'as' === AASEO_Queue::driver() ? 'scheduler' : 'cron';
 	}
 
 	// ---------------------------------------------------------------- 第二层
@@ -110,8 +129,11 @@ class AASEO_Probe {
 
 	/** 每批处理多少条(受运行时健康度调节) */
 	public static function batch_size( $kind ) {
-		$path  = self::execution_path();
-		$base  = 'cli' === $path ? 20 : ( 'scheduler' === $path ? 5 : 1 );
+		$path = self::execution_path();
+		// cron 路径比 AS 弱:wp-cron.php 一次请求要把所有到期事件跑完,而且不给自己留时间预算,
+		// 堆太多就会在半路被 PHP 掐死。批量给得比 scheduler 保守。
+		$bases = array( 'cli' => 20, 'scheduler' => 5, 'cron' => 2 );
+		$base  = isset( $bases[ $path ] ) ? $bases[ $path ] : 1;
 		$calib = self::calibration( $kind );
 		if ( $calib && $calib['median'] > 8 ) {
 			$base = max( 1, (int) floor( $base / 2 ) );   // 单条就慢,批量收窄
@@ -173,6 +195,16 @@ class AASEO_Probe {
 	// ---------------------------------------------------------------- 呈现
 
 	/**
+	 * "本站关了 WP-Cron"的那句告警。
+	 *
+	 * 单独拎出来是因为**两个地方要说同一句话**:环境面板(explain())和刚点下"开始"时的
+	 * 运行态提示(AASEO_Jobs::start())。同一个字面量只留一份,翻译也就只有一条。
+	 */
+	public static function cron_disabled_warning() {
+		return __( 'WP-Cron is switched off on this site (DISABLE_WP_CRON). Background batches only advance when your server cron calls wp-cron.php — if no server cron is set up, they will not run at all. Use WP-CLI instead.', 'ilang-auto-ai-seo' );
+	}
+
+	/**
 	 * 每个自动推导出的参数都配一句"为什么是这个值" ——
 	 * 设置页把探测结论讲给用户听,而不是甩一堆数字让他猜。
 	 */
@@ -185,9 +217,23 @@ class AASEO_Probe {
 		$paths = array(
 			'cli'       => __( 'WP-CLI available — batches run with no web timeout. Strongest path.', 'ilang-auto-ai-seo' ),
 			'scheduler' => __( 'Running through Action Scheduler: work continues across requests via loopback, so a web timeout cannot stop a batch.', 'ilang-auto-ai-seo' ),
-			'limited'   => __( 'Limited environment — processing a couple of items per request. Consider running via WP-CLI.', 'ilang-auto-ai-seo' ),
+			'cron'      => __( "Running through WordPress' own cron. This plugin no longer bundles a queue library; if any plugin on this site provides Action Scheduler (WooCommerce, for example), it is used automatically instead.", 'ilang-auto-ai-seo' ),
 		);
-		$out[] = $paths[ $path ];
+		// execution_path() 只会返回上面这三个之一;真出了第四种,宁可少说一句也不编一句
+		if ( isset( $paths[ $path ] ) ) {
+			$out[] = $paths[ $path ];
+		}
+
+		/*
+		 * cron 路径的可靠性差在哪儿,如实说 —— 不是"一样快",是"取决于有没有人访问你的站"。
+		 * 用户看得见这句,才不会对着一个几小时不动的进度条怀疑插件坏了。
+		 */
+		if ( 'cron' === $path ) {
+			$out[] = __( "WordPress cron is driven by visits to your site, so batches advance a few items at a time and a quiet site advances slowly. Nothing is lost — a batch picks up where it left off. WP-CLI runs the same work at full speed.", 'ilang-auto-ai-seo' );
+			if ( ! empty( $s['wp_cron_disabled'] ) ) {
+				$out[] = self::cron_disabled_warning();
+			}
+		}
 
 		if ( 0 === $s['max_execution_time'] ) {
 			$out[] = __( 'PHP reports no execution limit, but hosts often cut web requests off in front of PHP — measured timing is used instead of this value.', 'ilang-auto-ai-seo' );
